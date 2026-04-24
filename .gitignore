@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Intermediate analysis caches + outputs (regenerable)
+cache_*.csv
+output_*.csv
+output_*.png
+
+# Data files never belong in the repo
+*.parquet
+*.zip
+*.xlsx
+*.xls
+*.xlsm
+*.xlrd
+
+# Secrets
+.env
+*.key
+census_api_key.txt

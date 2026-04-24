@@ -1,0 +1,15 @@
+# HCAI chargemaster ingestion + analysis
+# Pin majors; minors allowed to float
+pandas>=2.2,<3.0
+numpy>=1.26,<3.0
+openpyxl>=3.1,<4.0
+xlrd==2.0.2              # only reads .xls (pre-xlsx) — last release by design
+pyarrow>=15.0,<25.0      # parquet writer/reader for cdm_<year>.parquet
+tqdm>=4.66,<5.0
+requests>=2.31,<3.0      # Census API pulls in downstream analysis notebooks
+scipy>=1.12,<2.0
+statsmodels>=0.14,<1.0
+scikit-learn>=1.4,<2.0   # optional, for later modeling steps
+matplotlib>=3.8,<4.0
+geopandas>=0.14,<2.0     # choropleth maps (Parvati's Block 9)
+mapclassify>=2.6,<3.0    # quantile binning for choropleths
