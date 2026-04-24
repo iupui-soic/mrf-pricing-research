@@ -1,93 +1,79 @@
-Loaded /data0/hcai-chargemasters/ingest/matched_rows_with_zip_2024.csv
+=== Loaded matched_rows_with_zip_2024.csv ===
   rows: 2,476  hospitals: 235  OSHPD: 237  ZIPs: 210
 
 === Per-CPT price distribution (2024) ===
-                          count        mean   median          std      min          max
-procedure_code cpt_group                                                               
-99281          emergency    214  2044937.39   454.00  10918355.04     0.01  61692810.00
-59430          delivery      20      609.39   484.85       424.55   120.84      1400.00
-99282          emergency    419  1047657.37  1069.00   7860616.41     0.07  61692828.00
-99292          emergency    144  2191222.91  1555.00  11219317.14     0.06  61030557.00
-99283          emergency    434  1012254.96  1811.25   7725534.63     0.07  61692836.00
-59410          delivery      12     2347.25  1866.46      1289.56  1297.00      4915.00
-59514          delivery      40     3353.83  1890.92      5142.53   769.00     30276.72
-59620          delivery      10     3850.68  2156.50      4490.03  1515.13     16300.00
-59515          delivery      23     2078.61  2229.95       976.49   321.00      4450.72
-99284          emergency    435  1011145.03  2869.78   7716624.19     0.07  61692844.00
-59622          delivery       4     2992.50  2992.50       383.94  2660.00      3325.00
-59400          delivery      28     4491.74  4170.42      1356.93  2945.80      8092.00
-59510          delivery      21     4472.13  4172.91      2003.64   815.76      9453.00
-99285          emergency    382  1152633.27  4538.00   8225870.94     0.07  61692851.00
-59610          delivery       8     4865.35  4806.50       606.89  4170.42      5678.00
-59618          delivery       6     5032.64  4856.00       858.92  4172.91      6069.00
-59409          delivery      95    91514.72  5365.00    831027.63  1229.34   8105940.00
-99291          emergency    181  1747609.52  6737.61  10034100.03     0.06  61005146.00
+                          count        mean   median          std
+procedure_code cpt_group                                         
+99281          emergency    214  2044937.39   454.00  10918355.04
+59430          delivery      20      609.39   484.85       424.55
+99282          emergency    419  1047657.37  1069.00   7860616.41
+99292          emergency    144  2191222.91  1555.00  11219317.14
+99283          emergency    434  1012254.96  1811.25   7725534.63
+59410          delivery      12     2347.25  1866.46      1289.56
+59514          delivery      40     3353.83  1890.92      5142.53
+59620          delivery      10     3850.68  2156.50      4490.03
+59515          delivery      23     2078.61  2229.95       976.49
+99284          emergency    435  1011145.03  2869.78   7716624.19
+59622          delivery       4     2992.50  2992.50       383.94
+59400          delivery      28     4491.74  4170.42      1356.93
+59510          delivery      21     4472.13  4172.91      2003.64
+99285          emergency    382  1152633.27  4538.00   8225870.94
+59610          delivery       8     4865.35  4806.50       606.89
+59618          delivery       6     5032.64  4856.00       858.92
+59409          delivery      95    91514.72  5365.00    831027.63
+99291          emergency    181  1747609.52  6737.61  10034100.03
+[census] cached: /data0/hcai-chargemasters/ingest/cache_census_zip_2024.csv  (1,762 ZIPs)
+[mortality] reading /data0/hcai-chargemasters/ingest/ca_deaths_zip_2019-2024.csv
+[mortality] 2,089 ZIPs with 2024 all-cause deaths
+[zip] before cleaning: 210, after: 201
 
-=== CPT-group price stats ===
-            count        mean         std     min      25%     50%      75%         max
-cpt_group                                                                              
-delivery    267.0    34664.77   495829.81  120.84  1920.19  3409.3  5395.00   8105940.0
-emergency  2209.0  1280177.06  8649392.26    0.01   711.20  1813.0  3984.53  61692851.0
+=== ZIP-level dataset ready: 201 ZIPs ===
+       avg_price_all  median_income  poverty_rate  pct_uninsured  deaths_per_100k  idx_hvi  idx_poverty_burden
+count         201.00         201.00        201.00         201.00           201.00   201.00              201.00
+mean       287927.74       94669.68          0.13           0.06           865.07    39.40                2.30
+std       1889599.09       33311.50          0.07           0.03           315.16    17.12               13.76
+min           347.63       28535.00          0.03           0.00            94.91     0.00                0.00
+25%          2016.67       70063.00          0.08           0.04           678.80    27.16                0.02
+50%          3022.18       86685.00          0.11           0.06           816.97    37.78                0.04
+75%          4010.18      111797.00          0.16           0.08           980.75    48.98                0.10
+max      13623534.58      233333.00          0.46           0.17          2490.22   100.00              100.00
 
-=== ZIP-level aggregate ===
-  ZIPs: 210
-  ZIPs with ≥3 CPT codes: 206
-  ZIPs with ≥2 hospitals: 22
+=== Regression results (HC3 robust SE) ===
+[reg] n = 201
 
-  avg_price distribution:
-count         210.00
-mean       275682.97
-std       1849376.20
-min           106.43
-1%            128.14
-25%          1884.90
-50%          2973.75
-75%          3997.95
-99%      13347833.39
-max      13623534.58
-Name: avg_price, dtype: float64
+M1  log(price) ~ vulnerability components   |  n=201  R²=0.042
+  Intercept                : +14.6957 (p=0.0495)
+  poverty_rate_pct         :  -0.0248 (p=0.1864)
+  pct_uninsured_pct        :  -0.0520 (p=0.0628)
+  pct_elderly_pct          :  +0.0071 (p=0.8319)
+  pct_disability_pct       :  -0.0631 (p=0.1575)
+  log_median_income        :  -0.4589 (p=0.4579)
 
-=== Top 10 hospitals by CPT coverage ===
-                                                                n_cpts  n_rows  avg_price
-hospital                                             oshpd_id                            
-EISENHOWER MEDICAL CENTER                            106331168      18      95     1803.0
-RIDGECREST REGIONAL HOSPITAL                         106150782      16     200     1239.0
-KERN MEDICAL CENTER                                  106150736      13      48     3961.0
-ADVENTIST HEALTH REEDLEY                             106100797      12      22     3279.0
-ADVENTIST HEALTH SONORA - GREENLEY                   106554011      12      50     1528.0
-VENTURA COUNTY MEDICAL CENTER - SANTA PAULA HOSPITAL 106560521      12      48     1732.0
-VENTURA COUNTY MEDICAL CENTER                        106560481      12      48     1732.0
-ADVENTIST HEALTH UKIAH VALLEY                        106231396      11      30     4681.0
-ADVENTIST HEALTH CLEARLAKE                           106171049      11      23     3111.0
-UCI HEALTH-ORANGE                                    106301279      10      14     4564.0
+M2  log(price) ~ idx_hvi + n_hospitals_zip  |  n=201  R²=0.031
+  Intercept                :  +8.6056 (p=0.0000)
+  idx_hvi                  :  -0.0146 (p=0.0242)
+  n_hospitals_zip          :  +0.1004 (p=0.6843)
 
-=== Data-quality flags ===
-  rows with charge >$1,000,000: 64
-  rows with charge <$50:         79
-  rows with charge =$0 or NaN:   0
-  ZIPs with avg_price < $200 (Parvati's Block-5.1 flag): 3
-       avg_price  median_price  n_hospitals  n_cpt_codes  n_rows
-zip                                                             
-90650     106.43         82.63            1            5       9
-92369     106.43         82.63            1            5       9
-93422     106.43         82.63            1            5       9
+M3r age-adj mortality ~ price + vuln      |  n=201  R²=0.318
+  Intercept                : +218.5402 (p=0.0021)
+  avg_price_all            :  +0.0000 (p=0.2185)
+  poverty_rate_pct         :  -0.0810 (p=0.6771)
+  pct_uninsured_pct        :  +0.4878 (p=0.1604)
+  pct_disability_pct       :  +0.4304 (p=0.2070)
+  log_median_income        : -15.4349 (p=0.0066)
 
-=== Side-by-side vs Parvati's reported 2024 analysis ===
-                                   new corpus    Parvati notebook
-  unique hospitals            :     235         348 (per her choropleth footer)
-  unique ZIPs (with any data) :     210         308 (per her choropleth footer)
-  ZIPs with ≥3 CPT codes      :     206         — (her 'sparse_cpt' drop threshold)
-  ED+OB rows total            :    2476         — (she filters after load)
+=== Side-by-side vs Parvati's 2024 reported effects ===
+                                      new corpus            Parvati
+  M1  log_median_income coef      :   -0.4589      p=0.4579     +0.54 (p≈0.001)
+  M1  poverty_rate_pct coef       :   -0.0248      p=0.1864     small, mixed sign
+  M2  idx_hvi coef                :   -0.0146      p=0.0242     significant weak
+  M2  n_hospitals_zip coef        :   +0.1004      p=0.6843     positive (p≈0.034) [more competition → higher price]
+  M3r avg_price_all coef          :   +0.0000      p=0.2185     +0.0017 (p<0.001) [per dollar]
+  M3r pct_uninsured_pct coef      :   +0.4878      p=0.1604     +0.74
 
-Interpretation:
-  - Parvati's 348 hospitals likely counts every facility name
-    seen in the chargemaster CSV (including duplicates, specialty units,
-    and pre-canonicalization variants). Our 235 uses OSHPD ID for
-    de-duplication and only hospital-license types.
-  - Parvati's 308 ZIPs vs our 210 is the same pattern — hospital-ZIP
-    mismatches from her freeform string join vs our OSHPD-based join.
-  - Row totals and per-CPT medians should be roughly comparable to her
-    Block 2 output (screenshot of df_charge.groupby('cpt_group').describe).
-
-[info] CENSUS_API_KEY not set — skipping HVI/burden recomputation.
-       Set it and re-run to get the full regression comparison.
+Notes:
+  - Parvati's reported effects taken from output_regression_summary.csv
+    annotations in her notebook Block 7.4.
+  - Differences are expected: her input CSV had ~308 ZIPs after her
+    string-join; our OSHPD-join gives 210 ZIPs. Direction and significance
+    should match; magnitudes may shift with the cleaner denominator.
