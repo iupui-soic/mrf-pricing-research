@@ -13,3 +13,5 @@ scikit-learn>=1.4,<2.0   # optional, for later modeling steps
 matplotlib>=3.8,<4.0
 geopandas>=0.14,<2.0     # choropleth maps (Parvati's Block 9)
 mapclassify>=2.6,<3.0    # quantile binning for choropleths
+beautifulsoup4>=4.12,<5.0
+lxml>=5.0,<7.0

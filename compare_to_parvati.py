@@ -57,12 +57,11 @@ def load_dotenv(path: Path = Path(".env")):
 
 
 # ── Census ACS 5-year pull ──────────────────────────────────────────────
-def pull_census(year: int = 2023) -> pd.DataFrame:
+def pull_census(year: int = 2024) -> pd.DataFrame:
     """Pull ACS 5-year socioeconomic variables for all CA ZCTAs.
 
-    Uses the 2023 ACS 5-year release (covers 2019–2023) which is the most
-    recent 5-year release as of ingest time. Cached locally after first
-    pull; delete CENSUS_CACHE to force a refresh.
+    Defaults to the 2024 5-year release (covers 2020–2024) to match
+    Parvati's notebook. Delete CENSUS_CACHE to force a refresh.
     """
     if CENSUS_CACHE.exists():
         df = pd.read_csv(CENSUS_CACHE, dtype={"zip": str})

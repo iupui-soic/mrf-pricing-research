@@ -1,22 +1,74 @@
-# California Chargemasters — Ingest & Analysis Pipeline
+# PRICEPORTAL — Open hospital price transparency pipeline (CA + IN)
 
-Reproducible pipeline that extracts standardized procedure/drug codes and
-gross charges from the California HCAI (OSHPD) hospital chargemaster
-disclosures 2014–2025, joins them to facility ZIP codes via the HCAI
-Licensed Facility Listing, and prepares a corpus suitable for
-price-transparency and health-equity analyses.
+Reproducible pipeline that builds an open, multi-source hospital price
+transparency corpus for California and Indiana, spanning four price
+types (chargemaster / cash / negotiated / Medicare-allowable) at
+hospital × code × ZIP resolution.
+
+## Pipeline components
+
+```
+ingest_hcai.py ───────────────► CA chargemaster corpus 2014–25 (56.5 M rows)
+                                /data0/hcai-chargemasters/ingest/cdm_*.parquet
+
+mrf/  ────────────────────────► Federal HPT MRFs (CA + IN, 528 hospitals)
+                                /data0/mrf/files/<state>/<ccn>/
+
+medicare/ ────────────────────► CMS fee schedules (MPFS, OPPS, IPPS)
+                                /data0/medicare/extracted/<slot>/
+
+build_crosswalk.py ───────────► Hospital identity crosswalk
+                                /data0/crosswalk/facilities_crosswalk.parquet
+```
 
 ## Layout
 
+### CA chargemaster ingest (`/`)
+
 | File | Purpose |
 |---|---|
-| `ingest_hcai.py` | Walks `/data0/hcai-chargemasters/<year>/` tree, parses heterogeneous CDM xlsx/xls/csv files, emits typed parquet per year + master. |
-| `build_matched_with_zip.py` | Joins corpus to HCAI facility ZIP listing; produces `matched_rows_with_zip_<year>.csv` in the schema Parvati's notebook expects. |
-| `compare_to_parvati.py` | Reproduces Parvati's Block 2 / 5 summary stats on the new corpus for side-by-side verification. |
-| `requirements.txt` | Pinned dependencies (pandas 2.2+, openpyxl, xlrd 2.0.2, pyarrow, tqdm, …). |
-| `CORPUS_README.md` | Corpus schema, size, known limitations. |
+| `ingest_hcai.py` | Walks `/data0/hcai-chargemasters/<year>/`, parses heterogeneous CDM xlsx/xls/csv files, emits typed parquet per year + master. |
+| `build_matched_with_zip.py` | Joins corpus to HCAI facility ZIP listing; produces `matched_rows_with_zip_<year>.csv`. |
+| `compare_to_parvati.py` | Cross-pipeline reconciliation against the legacy notebook's summary stats. |
 | `coverage_report.md` | Per-year row / hospital / code-type counts. |
 | `comparison_2024.txt` | Snapshot output of `compare_to_parvati.py` for the 2024 slice. |
+| `CORPUS_README.md` | Per-corpus schema, size, known limitations. |
+
+### Federal MRF discovery + download (`mrf/`)
+
+| File | Purpose |
+|---|---|
+| `mrf/build_hospital_list.py` | Pulls CMS Hospital General Information, filters to CA + IN, emits `hospitals.csv` (528 Medicare-certified facilities). |
+| `mrf/discover_mrf_urls.py` | URL discovery via per-host crawl + filename validation. |
+| `mrf/seed_known_urls.py` | Merges curated seed CSVs (`seed_*.csv`) into `mrf_urls.csv` with HEAD validation. |
+| `mrf/download_mrfs.py` | Per-host rate-limited downloader; resumable; writes `downloads.csv` with sha256 + content-type. |
+| `mrf/sync_manual_uploads.py` | Reads `pending_hospitals.csv` URLs + an in-script `FILE_MAP` of manually-downloaded files; moves each into `<state>/<ccn>/` and updates ledgers. Used for the long tail. |
+| `mrf/reclassify_html_landing.py` | Catches files served as HTML landing pages (PARA HCFS, hospitalpricedisclosure.com, etc.) and reclassifies them `exempt:portal_landing`. |
+| `mrf/mark_exempt_*.py` | Marks federal (VA / DoD) and other exempt categories. |
+| `mrf/pending_hospitals.csv` | Long-tail seed list — manually-researched URLs that bypass automated discovery. |
+
+### Medicare benchmark fetch (`medicare/`)
+
+| File | Purpose |
+|---|---|
+| `medicare/download_medicare.py` | Fetches MPFS RVU files (CY2024–2026), OPPS Addendum B (Jul-2025 + Jan-2026), IPPS Table 5 (FY2025 + FY2026). 9 ZIPs auto-extracted. Ledger at `/data0/medicare/downloads.csv`. |
+
+### Hospital identity crosswalk (`/`)
+
+| File | Purpose |
+|---|---|
+| `build_crosswalk.py` | Joins CMS POS + HCAI facilities + extracted EINs + extracted/looked-up NPIs into `/data0/crosswalk/facilities_crosswalk.parquet`. |
+| `extract_npi_from_mrfs.py` | Reads `type_2_npi` from CMS v3.0 MRF metadata (CSV/JSON/XLSX/ZIP-aware, content-sniffing). |
+| `lookup_nppes.py` | Falls back to NPPES NPI Registry API for hospitals on v2.0 MRFs (where `type_2_npi` doesn't exist). |
+| `lookup_propublica_eins.py` | Falls back to ProPublica Nonprofit Explorer (IRS Form 990 mirror) for nonprofit hospitals served via aggregator portals where the MRF URL strips the EIN. |
+
+### Audit framework (`audit/`)
+
+| File | Purpose |
+|---|---|
+| `audit/build_audit_sample.py` | Generates `audit_sample_200.csv` — stratified random sample from `cdm_all.parquet` for human-auditor labeling. Deterministic (seed=20260426). |
+| `audit/score_audit.py` | Reads the labeled sample, computes per-field + per-code_type precision, emits `audit_results.md`. |
+| `audit/README.md` | Labeling rubric (what counts as correct for each of the four `audit_correct_*` fields). |
 
 ## Reproducibility
 
@@ -24,56 +76,61 @@ price-transparency and health-equity analyses.
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# Step 1 — ingest (15 min on 16 cores, 4,372 CDM files)
+# Step 1 — CA chargemaster ingest (15 min, 16 cores, 4,372 CDM files)
 .venv/bin/python ingest_hcai.py --workers 16
-
-# Step 2 — facility ZIP join (30 s)
 .venv/bin/python build_matched_with_zip.py
+.venv/bin/python compare_to_parvati.py     # sanity check
 
-# Step 3 — compare with Parvati's reported 2024 figures
-.venv/bin/python compare_to_parvati.py
+# Step 2 — federal MRF discovery + download (CA + IN)
+.venv/bin/python mrf/build_hospital_list.py     # 528 hospitals
+.venv/bin/python mrf/seed_known_urls.py         # validate seed URLs
+.venv/bin/python mrf/download_mrfs.py --resume  # ~72 GB total
+
+# Step 3 — Medicare fee schedules (24 MB)
+.venv/bin/python medicare/download_medicare.py
+
+# Step 4 — hospital identity crosswalk
+.venv/bin/python extract_npi_from_mrfs.py       # NPI from MRF metadata
+.venv/bin/python lookup_nppes.py                # NPPES fallback for residuals
+.venv/bin/python lookup_propublica_eins.py      # IRS-990 fallback for nonprofit residuals
+.venv/bin/python build_crosswalk.py             # join → facilities_crosswalk.parquet
+
+# Step 5 — audit framework
+.venv/bin/python audit/build_audit_sample.py    # 200-row sample for human labeling
+# (manual labeling step — see audit/README.md for rubric)
+.venv/bin/python audit/score_audit.py           # → audit_results.md
 ```
 
-## Why this replaces the legacy pipeline
+Every download produces a ledger CSV with sha256, byte size, source URL,
+and timestamp.
 
-The lab's prior `matched_rows_with_zip.csv` was produced by a Windows-only
+## Universe and denominator
+
+528 Medicare-certified hospitals across CA (378) + IN (150), sourced
+from CMS Hospital General Information (Provider of Services), filtered
+to all CMS hospital types (Acute Care, Critical Access, Children's,
+Psychiatric, Rural Emergency, plus VA/DoD acute), de-duplicated on CCN.
+
+The CMS HPT rule (45 CFR 180) binds Medicare-certified hospitals; broader
+state-licensure lists (HCAI ≈ 544 in CA; IN SDH ≈ 170) include facility
+classes not bound by the rule (Chemical Dependency Recovery Hospitals,
+many CA Psychiatric Health Facilities, etc.). 528 is the correct
+denominator for HPT compliance research.
+
+## Why this replaces the lab's prior single-state pipeline
+
+The previous `matched_rows_with_zip.csv` came from a Windows-only
 workflow (`PLHI_ANALYSIS.ipynb` + `chargemaster_extractor.py` + manual
-Excel-based ZIP join) that:
+Excel-based ZIP join) that ran in DEMO mode against 3 hospitals in 2024
+only, kept no record of hospital-name → ZIP mappings, filtered to a
+small CPT list at ingest (discarding HCPCS / revenue / DRG / NDC data),
+and required manual intervention between each run. It also covered only
+CA chargemaster — no federal HPT MRFs, no Medicare benchmarks, no
+cross-state comparison.
 
-- Ran in DEMO mode against 3 hospitals in 2024 only, not the full corpus.
-- Kept no record of which hospital-name → ZIP mappings were used.
-- Filtered to a small CPT list at ingest time, discarding HCPCS / revenue
-  / DRG / NDC data.
-- Accepted Common-25 and PCT_CHG files indistinguishably from real CDMs,
-  introducing fee-schedule and percent-change values into the "charge"
-  column that had to be cleaned downstream.
-- Required manual intervention between each run.
-
-The new pipeline captures the full 2014–2025 corpus (56.5 M rows across
-all six standardized code families), uses OSHPD facility IDs for
-deterministic cross-year joins, emits parquet for fast downstream
-reads, and is idempotent/reproducible from a single CLI.
-
-## Corpus size
-
-| Code family | Rows (2014–25) | Unique codes | Hospitals |
-|---|---:|---:|---:|
-| CPT | 6.5 M | ~55 K* | 439 |
-| HCPCS Level II | 24.0 M | ~4 K | ~150 |
-| Revenue Code (UB-04) | 23.6 M | ~490 | ~80 |
-| MS-DRG | ~570 | ~80 | ~10 |
-| NDC | 3.4 M | ~60 K | ~60 |
-| ICD-10-PCS | 0 | — | — |
-
-*Real AMA CPT space is ~10 K; the inflation is internal 5-digit hospital
-codes that still pass `^\d{5}$`. Apply an AMA reference-list filter
-downstream if you need a clean count.
-
-## Next steps not yet implemented
-
-1. **AMA CPT + CMS HCPCS canonical reference filter** to collapse the
-   ~55 K "unique CPTs" down to the real ~10 K namespace.
-2. **Hospital-name canonicalization** for the ~5% of rows where the
-   filename carries no OSHPD ID (mostly 2024–2025 Kaiser packets).
-3. **Census ACS 5-year pull + mortality join** to recompute Parvati's
-   HVI and regression models on the new corpus. Needs a Census API key.
+The current pipeline captures the full 2014–2025 CA chargemaster corpus
+(56.5 M rows), adds the federal MRF corpus for CA + IN (458 valid MRFs +
+70 exempt = 528 universe), the Medicare benchmark fee schedules (MPFS /
+OPPS / IPPS), and a hospital-identity crosswalk linking everything via
+CCN. All artifacts are sha256-checksummed and reproducible from a single
+CLI sequence.

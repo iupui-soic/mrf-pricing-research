@@ -113,17 +113,51 @@ def build_matched(facilities: pd.DataFrame, year: int | None) -> pd.DataFrame:
     ])
     print(f"[read] {len(df):,} rows")
 
-    # Filter to CPT + target codes
+    # Filter to CPT target codes with positive charges
     df = df[(df["code_type"] == "CPT") & df["procedure_code"].isin(ALL_TARGETS)]
-    print(f"[filter] target CPTs: {len(df):,} rows")
-
-    # Positive charges only — match Parvati's pipeline
     df = df[df["charge"].fillna(0) > 0]
-    print(f"[filter] positive charge: {len(df):,} rows")
+    print(f"[filter] target CPTs with positive charge: {len(df):,} rows")
 
-    # Join to ZIP
-    fac = facilities[["oshpd_id", "facility_name", "zip", "county", "city"]]
-    df = df.merge(fac, on="oshpd_id", how="left")
+    # Within-CPT p99 cap. Real ED/OB facility charges have per-code
+    # distributions that max out in the low tens of thousands; the tail
+    # above that is corrupt data (pharmacy quantities mis-keyed as
+    # charges, tuition-dollar rows, etc.). Capping pooled across CPTs
+    # would be too lax because delivery codes are systematically higher
+    # than ED E/M. Parvati caps pooled, which is less principled but
+    # close enough; this is tighter.
+    n_before = len(df)
+    df["_p99"] = df.groupby("procedure_code")["charge"].transform(
+        lambda s: s.quantile(0.99))
+    df = df[df["charge"] <= df["_p99"]].drop(columns="_p99").copy()
+    print(f"[filter] within-CPT p99 cap: {len(df):,} rows (dropped {n_before-len(df):,})")
+
+    # Join to ZIP — strict OSHPD match first, then a last-6-digit fallback
+    # that catches common filename typos (e.g., 160190949 → 106190949 for
+    # Henry Mayo Newhall Hospital).
+    fac = facilities[["oshpd_id", "facility_name", "zip", "county", "city"]].copy()
+    fac["oshpd_tail6"] = fac["oshpd_id"].str[-6:]
+
+    df = df.merge(fac.drop(columns="oshpd_tail6"), on="oshpd_id", how="left")
+    before = df["zip"].notna().sum()
+
+    # Fallback on last 6 digits for rows that didn't match strict
+    unmatched = df["zip"].isna() & df["oshpd_id"].notna()
+    if unmatched.any():
+        df["_tail"] = df["oshpd_id"].str[-6:]
+        fallback = fac.set_index("oshpd_tail6")[["facility_name","zip","county","city"]]
+        fb = df.loc[unmatched, "_tail"].map(fallback["zip"])
+        df.loc[unmatched, "zip"]           = df.loc[unmatched, "zip"].fillna(fb)
+        df.loc[unmatched, "facility_name"] = df.loc[unmatched, "facility_name"].fillna(
+            df.loc[unmatched, "_tail"].map(fallback["facility_name"]))
+        df.loc[unmatched, "county"]        = df.loc[unmatched, "county"].fillna(
+            df.loc[unmatched, "_tail"].map(fallback["county"]))
+        df.loc[unmatched, "city"]          = df.loc[unmatched, "city"].fillna(
+            df.loc[unmatched, "_tail"].map(fallback["city"]))
+        df = df.drop(columns="_tail")
+    recovered = df["zip"].notna().sum() - before
+    if recovered:
+        print(f"[join] fallback (last-6-digit match) recovered {recovered} rows")
+
     zip_rate = df["zip"].notna().mean()
     print(f"[join] facility match rate: {zip_rate:.1%}  "
           f"({df['zip'].notna().sum():,}/{len(df):,})")

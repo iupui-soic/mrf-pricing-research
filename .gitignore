@@ -8,6 +8,18 @@ cache_*.csv
 output_*.csv
 output_*.png
 
+# Audit sample is regenerable from build_audit_sample.py with seed=20260426;
+# audit_results.md is the post-labeling output. Both are intermediate.
+audit/audit_sample_*.csv
+audit/audit_results.md
+
+# Project planning + paper drafts — process artifacts, not reproducibility
+PROJECT_PLAN.md
+paper/
+
+# Notebook checkpoint dirs (some show up under subdirs)
+**/.ipynb_checkpoints/
+
 # Data files never belong in the repo
 *.parquet
 *.zip
