@@ -15,3 +15,5 @@ geopandas>=0.14,<2.0     # choropleth maps (Parvati's Block 9)
 mapclassify>=2.6,<3.0    # quantile binning for choropleths
 beautifulsoup4>=4.12,<5.0
 lxml>=5.0,<7.0
+ijson>=3.5,<4.0          # streaming JSON for large MRF files (up to 1.9 GB)
+playwright>=1.50,<2.0    # headless Chromium for portal-hosted MRF scraping
