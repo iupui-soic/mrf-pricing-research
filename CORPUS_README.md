@@ -173,7 +173,7 @@ Ledger: `/data0/medicare/downloads.csv` (rel_path, source_url, sha256, bytes, st
 
 Built by `build_crosswalk.py`. Single source of truth for joining the
 CA chargemaster, federal MRF, and Medicare benchmark corpora to each
-other and to external datasets (Census, mortality, IRS Form 990, NPPES).
+other and to external datasets (Census, mortality, NPPES).
 
 ### Files
 
@@ -184,7 +184,6 @@ other and to external datasets (Census, mortality, IRS Form 990, NPPES).
 | `/data0/crosswalk/crosswalk_coverage.md` | Per-field coverage breakdown with provenance |
 | `/data0/crosswalk/ccn_to_npi.csv` | NPI extracted from MRF metadata `type_2_npi` |
 | `/data0/crosswalk/ccn_to_npi_nppes.csv` | NPI from NPPES Registry API fallback |
-| `/data0/crosswalk/ccn_to_ein_propublica.csv` | EIN from ProPublica IRS-990 fallback |
 
 ### Schema (per row)
 
@@ -192,15 +191,26 @@ other and to external datasets (Census, mortality, IRS Form 990, NPPES).
 |---|---|---|
 | `ccn` | CMS POS | 100% |
 | `oshpd_id` | HCAI facilities + 11 hand-mapped renames | 100% of state-licensable CA |
-| `ein` | MRF filename (381) + ProPublica 990 (23) | 404/528 (76.5%); 88% of real MRFs |
-| `ein_source` | `url_filename` \| `propublica_990` | — |
-| `npi` | MRF metadata `type_2_npi` (335) + NPPES API (105) | 440/528 (83.3%); 88% of real MRFs |
-| `npi_source` | `mrf_metadata` \| `nppes:zip+name` \| `nppes:state+name` | — |
+| `ein` | CMS-mandated MRF filename `<EIN>_<hospital>_standardcharges.{csv,json}` | 381/528 (72%); 83% of real MRFs |
+| `ein_source` | `url_filename` | — |
+| `npi` | MRF metadata `type_2_npi` + NPPES NPI Registry API fallback | 505/528 (96%); 98% of real MRFs |
+| `npi_source` | `mrf_metadata` \| `nppes:taxonomy:<type>` \| `nppes:taxonomy+name:<type>` \| `nppes:zip+name` \| `nppes:state+name` | — |
 | `in_facility_id` | Indiana SDH licensure | 0% — IN SDH publishes only PDF; analysis keys on CCN for IN |
 | `name`, `address`, `city`, `state`, `zip`, `county` | CMS POS | 100% |
 | `hospital_type`, `ownership`, `has_ed` | CMS POS | 100% |
 | `oshpd_match_score` | 0.0–1.0 fuzzy similarity (CA only) | — |
 | `oshpd_match_method` | `exact_zip+name` \| `zip_only_fuzzy` \| `name_only_fuzzy` \| `manual_override` \| `n/a (federal)` \| `n/a (no HCAI counterpart)` | — |
+
+### EIN — note on scope
+
+EIN is **not in the CMS v3.0 MRF metadata schema**. CMS uses EIN only in
+the mandated filename convention. The pipeline extracts EIN from those
+filenames (381 hospitals) but does not chase coverage further: EIN is an
+optional join key, primarily useful for IRS Form 990 enrichment of
+nonprofit hospitals, and is not on the critical path for the analytic
+pipeline (which keys on CCN and NPI throughout). Aggregator-portal-served
+hospitals (PARA HCFS, hospital-price-index, Box, Craneware) typically
+strip the EIN from the URL — those gaps are residual and accepted.
 
 ### OSHPD match-method distribution (CA)
 

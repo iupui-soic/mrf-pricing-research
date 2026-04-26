@@ -43,9 +43,8 @@ HOSPITALS = Path("/data0/mrf/hospitals.csv")
 HCAI_FACILITIES = Path("/data0/hcai-chargemasters/ingest/facilities.csv")
 MRF_URLS = Path("/data0/mrf/mrf_urls.csv")
 DOWNLOADS = Path("/data0/mrf/downloads.csv")
-NPI_CSV = OUT_DIR / "ccn_to_npi.csv"        # from extract_npi_from_mrfs.py
+NPI_CSV = OUT_DIR / "ccn_to_npi.csv"          # from extract_npi_from_mrfs.py
 NPI_NPPES = OUT_DIR / "ccn_to_npi_nppes.csv"  # from lookup_nppes.py
-EIN_PROPUBLICA = OUT_DIR / "ccn_to_ein_propublica.csv"  # from lookup_propublica_eins.py
 
 # Hand-mapped CCN -> OSHPD overrides for hospitals the fuzzy join couldn't
 # place automatically (mostly renames between CMS POS and HCAI). Verified
@@ -223,14 +222,14 @@ def main() -> None:
     hosp_in["oshpd_match_method"] = "n/a (non-CA)"
 
     out = pd.concat([hosp_ca, hosp_in], ignore_index=True)
-    # EIN: prefer URL-extracted, fall back to ProPublica Nonprofit Explorer
+    # EIN: extracted from CMS-mandated MRF filename convention
+    # `<EIN>_<hospital>_standardcharges.{csv,json}` only. EIN is not in
+    # the CMS v3.0 metadata schema, so there's no per-file body extraction
+    # path. EIN is an optional join key (primarily for IRS Form 990
+    # nonprofit-financial enrichment); the core analytic pipeline keys on
+    # CCN/NPI throughout, so partial EIN coverage is acceptable.
     ein_combined: dict[str, tuple[str, str]] = {ccn: (e, "url_filename")
                                                  for ccn, e in eins.items()}
-    if EIN_PROPUBLICA.exists():
-        with EIN_PROPUBLICA.open() as f:
-            for r in csv.DictReader(f):
-                if r.get("ein") and r["ccn"] not in ein_combined:
-                    ein_combined[r["ccn"]] = (r["ein"], "propublica_990")
     out["ein"] = out["ccn"].map(lambda c: ein_combined.get(c, (None,))[0])
     out["ein_source"] = out["ccn"].map(
         lambda c: ein_combined.get(c, (None, None))[1])
@@ -301,7 +300,6 @@ def main() -> None:
         n_real_mrf = len(real_mrf_ccns)
     n_ein_real = sum(1 for ccn in real_mrf_ccns if ein_combined.get(ccn, (None,))[0])
     n_ein_url = (out["ein_source"] == "url_filename").sum()
-    n_ein_pp = (out["ein_source"] == "propublica_990").sum()
     n_npi_real = sum(1 for ccn in real_mrf_ccns if ccn in npis)
 
     md = [
@@ -312,21 +310,16 @@ def main() -> None:
         f"- CCN: 100% (every row keyed on CCN)",
         f"- EIN: **{n_ein}/{n}** of universe ({100*n_ein/n:.1f}%); "
         f"**{n_ein_real}/{n_real_mrf}** of hospitals with a real MRF "
-        f"({100*n_ein_real/max(n_real_mrf,1):.1f}%). Sources, in priority "
-        f"order:",
-        f"  1. **CMS-mandated MRF filename** "
-        f"`<EIN>_<hospital>_standardcharges.{{csv,json}}` "
-        f"({n_ein_url}/{n} = {100*n_ein_url/n:.1f}%) — when hospitals "
-        f"host their own file rather than serving via an aggregator.",
-        f"  2. **ProPublica Nonprofit Explorer (IRS Form 990)** fallback "
-        f"({n_ein_pp}/{n} = {100*n_ein_pp/n:.1f}%) — covers nonprofit "
-        f"and many hospital-district hospitals (see "
-        f"`lookup_propublica_eins.py`).",
-        f"- For-profit hospitals served via aggregator portals (PARA, "
-        f"hospital-price-index, Box, Craneware) without an EIN-prefixed "
-        f"filename have **no public free EIN source**; CMS does not "
-        f"publish CCN→EIN, and IRS Form 990 only covers tax-exempt "
-        f"entities. Those gaps are residual.",
+        f"({100*n_ein_real/max(n_real_mrf,1):.1f}%). Source: parsed from "
+        f"the CMS-mandated MRF filename convention "
+        f"`<EIN>_<hospital>_standardcharges.{{csv,json}}`.",
+        f"- **EIN is not in the CMS v3.0 metadata schema** and is not on "
+        f"the critical path for the analysis (the pipeline keys on CCN "
+        f"and NPI throughout). EIN is an optional join key, primarily "
+        f"useful for IRS Form 990 enrichment of nonprofit hospitals. "
+        f"Aggregator-portal-served hospitals (PARA, hospital-price-index, "
+        f"Box, Craneware) typically lack the EIN-prefixed filename and "
+        f"have no public free EIN source — those gaps are residual.",
         f"- OSHPD ID matched (CA state-licensed only): **{n_oshpd}/"
         f"{n_ca_eligible}** ({100*n_oshpd/n_ca_eligible:.1f}%)",
         f"  - exact ZIP + ≥0.9 name similarity: {n_oshpd_strong}",

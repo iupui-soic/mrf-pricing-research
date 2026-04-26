@@ -59,8 +59,7 @@ build_crosswalk.py ───────────► Hospital identity crossw
 |---|---|
 | `build_crosswalk.py` | Joins CMS POS + HCAI facilities + extracted EINs + extracted/looked-up NPIs into `/data0/crosswalk/facilities_crosswalk.parquet`. |
 | `extract_npi_from_mrfs.py` | Reads `type_2_npi` from CMS v3.0 MRF metadata (CSV/JSON/XLSX/ZIP-aware, content-sniffing). |
-| `lookup_nppes.py` | Falls back to NPPES NPI Registry API for hospitals on v2.0 MRFs (where `type_2_npi` doesn't exist). |
-| `lookup_propublica_eins.py` | Falls back to ProPublica Nonprofit Explorer (IRS Form 990 mirror) for nonprofit hospitals served via aggregator portals where the MRF URL strips the EIN. |
+| `lookup_nppes.py` | NPPES NPI Registry API fallback for v2.0/v1.x MRFs (where `type_2_npi` doesn't exist). Three-pass: taxonomy+state+ZIP exact, then name+ZIP fuzzy, then state-only. Corporate-entity blocklist + state/ZIP3 hard filter prevent false positives. |
 
 ### Audit framework (`audit/`)
 
@@ -92,7 +91,6 @@ python3 -m venv .venv
 # Step 4 — hospital identity crosswalk
 .venv/bin/python extract_npi_from_mrfs.py       # NPI from MRF metadata
 .venv/bin/python lookup_nppes.py                # NPPES fallback for residuals
-.venv/bin/python lookup_propublica_eins.py      # IRS-990 fallback for nonprofit residuals
 .venv/bin/python build_crosswalk.py             # join → facilities_crosswalk.parquet
 
 # Step 5 — audit framework
