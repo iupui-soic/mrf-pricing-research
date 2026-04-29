@@ -10,7 +10,11 @@ by mrf/build_hospital_list.py), pulls ACS 5-year and CDC PLACES data
 for those ZIPs, and writes:
 
     /data0/census/in_zip_demographics.parquet
-    /data0/census/in_zip_mortality.parquet
+    /data0/census/in_zip_health_outcomes.parquet
+
+The PLACES output holds modeled prevalence rates from BRFSS, not death
+counts; the CA-side death-records join lives in compare_to_parvati.py
+and remains state-specific.
 
 Run:
     .venv/bin/python census/pull_census_in.py
@@ -30,11 +34,16 @@ HOSPITALS_CSV = Path("/data0/mrf/hospitals.csv")
 OUT_DIR       = Path("/data0/census")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-ACS_CACHE  = OUT_DIR / "in_acs_raw.json"
-MORT_CACHE = OUT_DIR / "in_mortality_raw.csv"
+ACS_CACHE     = OUT_DIR / "in_acs_raw.json"
+PLACES_CACHE  = OUT_DIR / "in_places_raw.csv"
 
-OUT_DEMO = OUT_DIR / "in_zip_demographics.parquet"
-OUT_MORT = OUT_DIR / "in_zip_mortality.parquet"
+OUT_DEMO   = OUT_DIR / "in_zip_demographics.parquet"
+OUT_HEALTH = OUT_DIR / "in_zip_health_outcomes.parquet"
+
+# ACS 5-year vintage. 2024 release covers 2020-2024 and matches the
+# CA-side pull in compare_to_parvati.py — keep these aligned so the
+# CA-vs-IN comparison isn't confounded by ACS period.
+ACS_YEAR = 2024
 
 # ── ACS variables ───────────────────────────────────────────────────────────
 ACS_VARS = [
@@ -46,7 +55,7 @@ ACS_VARS = [
 ]
 
 ACS_URL = (
-    f"https://api.census.gov/data/2022/acs/acs5"
+    f"https://api.census.gov/data/{ACS_YEAR}/acs/acs5"
     f"?get=NAME,{','.join(ACS_VARS)}"
     f"&for=zip%20code%20tabulation%20area:*"
 )
@@ -124,19 +133,22 @@ def pull_acs(in_zips: set[str]) -> pd.DataFrame:
     return df
 
 
-def pull_mortality(in_zips: set[str]) -> pd.DataFrame:
-    """Pull CDC PLACES ZCTA health outcomes filtered to IN ZIPs via API."""
-    if MORT_CACHE.exists():
-        print(f"[mortality] cached: {MORT_CACHE}")
-        df = pd.read_csv(MORT_CACHE, dtype=str)
+def pull_health_outcomes(in_zips: set[str]) -> pd.DataFrame:
+    """Pull CDC PLACES ZCTA health outcomes filtered to IN ZIPs via API.
+
+    PLACES values are BRFSS-modeled prevalence rates, not death counts —
+    that is why this is named health_outcomes, not mortality.
+    """
+    if PLACES_CACHE.exists():
+        print(f"[places] cached: {PLACES_CACHE}")
+        df = pd.read_csv(PLACES_CACHE, dtype=str)
         df["zip"]   = df["zip"].astype(str).str.zfill(5)
         df["health_outcome_rate"] = pd.to_numeric(
             df["health_outcome_rate"], errors="coerce"
         )
         return df
 
-    # Build WHERE clause to filter to our specific IN ZIPs
-    # Socrata API supports: locationname in('46001','46002',...)
+    # Socrata $where: locationname in('46001','46002',...)
     zip_list = ",".join(f"'{z}'" for z in sorted(in_zips))
     where    = f"locationname in({zip_list})"
     params   = urllib.parse.urlencode({
@@ -145,10 +157,10 @@ def pull_mortality(in_zips: set[str]) -> pd.DataFrame:
     })
     url = f"{CDC_BASE}?{params}"
 
-    print(f"[mortality] downloading from CDC PLACES (filtered to IN ZIPs)...")
-    urllib.request.urlretrieve(url, MORT_CACHE)
-    df = pd.read_csv(MORT_CACHE, dtype=str)
-    print(f"[mortality] saved: {MORT_CACHE}  ({len(df):,} raw rows)")
+    print(f"[places] downloading from CDC PLACES (filtered to IN ZIPs)...")
+    urllib.request.urlretrieve(url, PLACES_CACHE)
+    df = pd.read_csv(PLACES_CACHE, dtype=str)
+    print(f"[places] saved: {PLACES_CACHE}  ({len(df):,} raw rows)")
 
     df = df.rename(columns={
         "locationname": "zip",
@@ -165,7 +177,7 @@ def pull_mortality(in_zips: set[str]) -> pd.DataFrame:
         df["health_outcome_rate"], errors="coerce"
     )
 
-    print(f"[mortality] {len(df):,} IN ZIP health records from CDC PLACES")
+    print(f"[places] {len(df):,} IN ZIP health records from CDC PLACES")
     return df
 
 
@@ -176,24 +188,24 @@ def main():
     acs.to_parquet(OUT_DEMO, index=False)
     print(f"[out] {OUT_DEMO}  ({len(acs):,} rows)")
 
-    mort = pull_mortality(in_zips)
-    mort.to_parquet(OUT_MORT, index=False)
-    print(f"[out] {OUT_MORT}  ({len(mort):,} rows)")
+    health = pull_health_outcomes(in_zips)
+    health.to_parquet(OUT_HEALTH, index=False)
+    print(f"[out] {OUT_HEALTH}  ({len(health):,} rows)")
 
     print("\n  Summary:")
-    print(f"    IN hospital ZIPs:              {len(in_zips)}")
-    print(f"    IN ZIPs with Census data:      {len(acs)}")
-    print(f"    IN ZIPs with mortality data:   {mort['zip'].nunique()}")
+    print(f"    IN hospital ZIPs:                   {len(in_zips)}")
+    print(f"    IN ZIPs with Census data:           {len(acs)}")
+    print(f"    IN ZIPs with health-outcome data:   {health['zip'].nunique()}")
     if len(acs) > 0:
         print(f"    Median income range:  "
               f"${acs['median_household_income'].min():,.0f} – "
               f"${acs['median_household_income'].max():,.0f}")
         print(f"    Avg poverty rate:     "
               f"{acs['pct_poverty'].mean():.1%}")
-    if len(mort) > 0:
-        print(f"    Sample ZIPs in mortality: "
-              f"{mort['zip'].head(5).tolist()}")
-        print(f"    Unique measures:      {mort['measure'].nunique()}")
+    if len(health) > 0:
+        print(f"    Sample ZIPs in PLACES:    "
+              f"{health['zip'].head(5).tolist()}")
+        print(f"    Unique measures:          {health['measure'].nunique()}")
 
 
 if __name__ == "__main__":
