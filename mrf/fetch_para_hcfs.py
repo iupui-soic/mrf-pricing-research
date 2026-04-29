@@ -13,7 +13,7 @@ triggers an in-app download of the §180-compliant standardcharges CSV
 hosted at `Reports.aspx?dbName=<db>&type=CDMWithoutLabel`.
 
 Output:
-- File saved to `/data0/mrf/files/<state>/<ccn>/<original_filename>`
+- File saved to `/data0/mrf-pricing-research/mrf/files/<state>/<ccn>/<original_filename>`
 - `mrf_urls.csv` updated: `discovery_method` flipped from
   `exempt:portal_landing` to `para_hcfs_playwright`
 - `downloads.csv` appended with the new local_path + size + content-type
@@ -30,7 +30,7 @@ from pathlib import Path
 import pandas as pd
 from playwright.sync_api import sync_playwright
 
-DATA_DIR = Path("/data0/mrf")
+DATA_DIR = Path("/data0/mrf-pricing-research/mrf")
 FILES_DIR = DATA_DIR / "files"
 URLS_CSV = DATA_DIR / "mrf_urls.csv"
 DOWNLOADS_CSV = DATA_DIR / "downloads.csv"

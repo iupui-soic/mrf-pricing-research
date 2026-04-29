@@ -9,16 +9,16 @@ hospital × code × ZIP resolution.
 
 ```
 ingest_hcai.py ───────────────► CA chargemaster corpus 2014–25 (56.5 M rows)
-                                /data0/hcai-chargemasters/ingest/cdm_*.parquet
+                                /data0/mrf-pricing-research/hcai-chargemasters/ingest/cdm_*.parquet
 
 mrf/  ────────────────────────► Federal HPT MRFs (CA + IN, 528 hospitals)
-                                /data0/mrf/files/<state>/<ccn>/
+                                /data0/mrf-pricing-research/mrf/files/<state>/<ccn>/
 
 medicare/ ────────────────────► CMS fee schedules (MPFS, OPPS, IPPS)
-                                /data0/medicare/extracted/<slot>/
+                                /data0/mrf-pricing-research/medicare/extracted/<slot>/
 
 build_crosswalk.py ───────────► Hospital identity crosswalk
-                                /data0/crosswalk/facilities_crosswalk.parquet
+                                /data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet
 ```
 
 ## Layout
@@ -27,7 +27,7 @@ build_crosswalk.py ───────────► Hospital identity crossw
 
 | File | Purpose |
 |---|---|
-| `ingest_hcai.py` | Walks `/data0/hcai-chargemasters/<year>/`, parses heterogeneous CDM xlsx/xls/csv files, emits typed parquet per year + master. |
+| `ingest_hcai.py` | Walks `/data0/mrf-pricing-research/hcai-chargemasters/<year>/`, parses heterogeneous CDM xlsx/xls/csv files, emits typed parquet per year + master. |
 | `build_matched_with_zip.py` | Joins corpus to HCAI facility ZIP listing; produces `matched_rows_with_zip_<year>.csv`. |
 | `compare_to_parvati.py` | Cross-pipeline reconciliation against the legacy notebook's summary stats. |
 | `coverage_report.md` | Per-year row / hospital / code-type counts. |
@@ -51,13 +51,13 @@ build_crosswalk.py ───────────► Hospital identity crossw
 
 | File | Purpose |
 |---|---|
-| `medicare/download_medicare.py` | Fetches MPFS RVU files (CY2024–2026), OPPS Addendum B (Jul-2025 + Jan-2026), IPPS Table 5 (FY2025 + FY2026). 9 ZIPs auto-extracted. Ledger at `/data0/medicare/downloads.csv`. |
+| `medicare/download_medicare.py` | Fetches MPFS RVU files (CY2024–2026), OPPS Addendum B (Jul-2025 + Jan-2026), IPPS Table 5 (FY2025 + FY2026). 9 ZIPs auto-extracted. Ledger at `/data0/mrf-pricing-research/medicare/downloads.csv`. |
 
 ### Hospital identity crosswalk (`/`)
 
 | File | Purpose |
 |---|---|
-| `build_crosswalk.py` | Joins CMS POS + HCAI facilities + extracted EINs + extracted/looked-up NPIs into `/data0/crosswalk/facilities_crosswalk.parquet`. |
+| `build_crosswalk.py` | Joins CMS POS + HCAI facilities + extracted EINs + extracted/looked-up NPIs into `/data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet`. |
 | `extract_npi_from_mrfs.py` | Reads `type_2_npi` from CMS v3.0 MRF metadata (CSV/JSON/XLSX/ZIP-aware, content-sniffing). |
 | `lookup_nppes.py` | NPPES NPI Registry API fallback for v2.0/v1.x MRFs (where `type_2_npi` doesn't exist). Three-pass: taxonomy+state+ZIP exact, then name+ZIP fuzzy, then state-only. Corporate-entity blocklist + state/ZIP3 hard filter prevent false positives. |
 

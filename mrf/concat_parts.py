@@ -5,10 +5,10 @@ concat_parts.py
 Merges per-hospital parquet parts written by parse_mrf.py into the two
 unified output files:
 
-  /data0/mrf/parsed/mrf_gross.parquet
-  /data0/mrf/parsed/mrf_negotiated.parquet
+  /data0/mrf-pricing-research/mrf/parsed/mrf_gross.parquet
+  /data0/mrf-pricing-research/mrf/parsed/mrf_negotiated.parquet
 
-Reads files from /data0/mrf/parsed/parts/{gross,neg}_<state>_<ccn>.parquet
+Reads files from /data0/mrf-pricing-research/mrf/parsed/parts/{gross,neg}_<state>_<ccn>.parquet
 and streams them through a single ParquetWriter (preserves schema,
 re-uses snappy compression). Memory-bounded: each part is read and
 written one at a time.
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-PARTS = Path("/data0/mrf/parsed/parts")
-OUT_DIR = Path("/data0/mrf/parsed")
+PARTS = Path("/data0/mrf-pricing-research/mrf/parsed/parts")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf/parsed")
 GROSS_OUT = OUT_DIR / "mrf_gross.parquet"
 NEG_OUT = OUT_DIR / "mrf_negotiated.parquet"
 

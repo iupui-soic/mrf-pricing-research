@@ -9,7 +9,7 @@ Sources:
   - MPFS PPRRVU 2026 Jan         → CPT/HCPCS, Total Non-Facility RVU * CF
 
 Output:
-  /data0/medicare/medicare_cpt_2026.parquet
+  /data0/mrf-pricing-research/medicare/medicare_cpt_2026.parquet
     columns: code, opps_payment, mpfs_national, source
 
 Methodology note:
@@ -28,14 +28,14 @@ from pathlib import Path
 
 import pandas as pd
 
-OUT = Path("/data0/medicare/medicare_cpt_2026.parquet")
+OUT = Path("/data0/mrf-pricing-research/medicare/medicare_cpt_2026.parquet")
 
 OPPS_XLSX = Path(
-    "/data0/medicare/extracted/addendum_b_2026_jan/"
+    "/data0/mrf-pricing-research/medicare/extracted/addendum_b_2026_jan/"
     "2026 January Web Addendum B.12.29.25.xlsx"
 )
 MPFS_CSV  = Path(
-    "/data0/medicare/extracted/rvu26a/PPRRVU2026_Jan_nonQPP.csv"
+    "/data0/mrf-pricing-research/medicare/extracted/rvu26a/PPRRVU2026_Jan_nonQPP.csv"
 )
 
 # CMS CY2026 MPFS non-MIPS conversion factor (Final Rule).

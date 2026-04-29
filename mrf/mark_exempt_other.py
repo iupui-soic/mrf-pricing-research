@@ -2,7 +2,7 @@
 """
 mark_exempt_other.py
 ====================
-Apply exemptions from `/data0/mrf/exempt_other.csv` to `mrf_urls.csv`.
+Apply exemptions from `/data0/mrf-pricing-research/mrf/exempt_other.csv` to `mrf_urls.csv`.
 
 `exempt_other.csv` collects all non-federal exemption findings from the
 discovery pipeline:
@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pandas as pd
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 HOSP_CSV = OUT_DIR / "hospitals.csv"
 URL_CSV = OUT_DIR / "mrf_urls.csv"
 EXEMPT_CSV = OUT_DIR / "exempt_other.csv"

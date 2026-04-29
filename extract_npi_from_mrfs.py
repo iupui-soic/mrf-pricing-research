@@ -13,7 +13,7 @@ CMS v2.0 / v3.0 MRF spec puts hospital NPI in `type_2_npi`:
 Older v1.x files sometimes use `hospital_npi` or just `npi`; we try those
 as fallbacks.
 
-Output: /data0/crosswalk/ccn_to_npi.csv (ccn, npi, npi_source)
+Output: /data0/mrf-pricing-research/crosswalk/ccn_to_npi.csv (ccn, npi, npi_source)
 """
 
 from __future__ import annotations
@@ -24,8 +24,8 @@ import re
 import zipfile
 from pathlib import Path
 
-DOWNLOADS = Path("/data0/mrf/downloads.csv")
-OUT = Path("/data0/crosswalk/ccn_to_npi.csv")
+DOWNLOADS = Path("/data0/mrf-pricing-research/mrf/downloads.csv")
+OUT = Path("/data0/mrf-pricing-research/crosswalk/ccn_to_npi.csv")
 
 NPI_RE = re.compile(r"\b(\d{10})\b")
 NPI_FIELD_NAMES = ("type_2_npi", "hospital_npi", "npi")

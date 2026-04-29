@@ -5,7 +5,7 @@ build_matched_with_zip.py
 Reproducible replacement for the legacy `matched_rows_with_zip.csv`
 used by Parvati's and Sravani's analysis notebooks.
 
-Takes the ingest output at /data0/hcai-chargemasters/ingest/cdm_all.parquet,
+Takes the ingest output at /data0/mrf-pricing-research/hcai-chargemasters/ingest/cdm_all.parquet,
 joins OSHPD_ID -> ZIP from the HCAI Licensed Facility Listing (downloaded
 automatically if not cached), filters to target CPT codes, and writes a
 flat CSV in the schema Parvati's notebook expects:
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pandas as pd
 
-INGEST_DIR   = Path("/data0/hcai-chargemasters/ingest")
+INGEST_DIR   = Path("/data0/mrf-pricing-research/hcai-chargemasters/ingest")
 FACILITY_URL = (
     "https://data.chhs.ca.gov/dataset/59d9abe7-2664-407a-a5aa-f89a866f3381"
     "/resource/641c5557-7d65-4379-8fea-6b7dedbda40b/download/"

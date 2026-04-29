@@ -28,7 +28,7 @@ the v1 name-only matcher: hospitals where NPPES uses a different legal
 name (e.g., "Grossmont Hospital" → "GROSSMONT HOSPITAL CORPORATION",
 Sharp Grossmont, etc.) but the taxonomy + ZIP fingerprint is unique.
 
-Output: /data0/crosswalk/ccn_to_npi_nppes.csv (ccn, npi, match_method,
+Output: /data0/mrf-pricing-research/crosswalk/ccn_to_npi_nppes.csv (ccn, npi, match_method,
 match_score, nppes_name, nppes_zip).
 """
 
@@ -44,9 +44,9 @@ from pathlib import Path
 import requests
 
 API = "https://npiregistry.cms.hhs.gov/api/"
-HOSPITALS = Path("/data0/mrf/hospitals.csv")
-EXISTING_NPI = Path("/data0/crosswalk/ccn_to_npi.csv")
-OUT = Path("/data0/crosswalk/ccn_to_npi_nppes.csv")
+HOSPITALS = Path("/data0/mrf-pricing-research/mrf/hospitals.csv")
+EXISTING_NPI = Path("/data0/mrf-pricing-research/crosswalk/ccn_to_npi.csv")
+OUT = Path("/data0/mrf-pricing-research/crosswalk/ccn_to_npi_nppes.csv")
 
 UA = {"User-Agent": "PRICEPORTAL-research/0.1 (sunbiz@gmail.com)"}
 

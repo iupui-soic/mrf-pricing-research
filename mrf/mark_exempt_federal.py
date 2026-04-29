@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pandas as pd
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 HOSP_CSV = OUT_DIR / "hospitals.csv"
 URL_CSV = OUT_DIR / "mrf_urls.csv"
 EXEMPT_CSV = OUT_DIR / "exempt_hospitals.csv"

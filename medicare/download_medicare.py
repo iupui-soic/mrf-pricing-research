@@ -2,13 +2,13 @@
 """
 download_medicare.py
 ====================
-Fetches CMS Medicare fee-schedule data into /data0/medicare/:
+Fetches CMS Medicare fee-schedule data into /data0/mrf-pricing-research/medicare/:
 
   mpfs/  — Physician Fee Schedule RVU files (CY2024–2026, quarterly)
   opps/  — Outpatient PPS Addendum B (HCPCS × APC × payment rate)
   ipps/  — Inpatient PPS Table 5 (MS-DRG weights, GMLOS, AMLOS)
 
-After download, each .zip is extracted into /data0/medicare/extracted/<slot>/
+After download, each .zip is extracted into /data0/mrf-pricing-research/medicare/extracted/<slot>/
 for downstream parsers. A `downloads.csv` ledger is written with
 sha256/size/source URL for every artifact (Reproducibility checklist §10
 of PROJECT_PLAN.md requires this).
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import requests
 
-OUT_DIR = Path("/data0/medicare")
+OUT_DIR = Path("/data0/mrf-pricing-research/medicare")
 LEDGER = OUT_DIR / "downloads.csv"
 
 UA = {

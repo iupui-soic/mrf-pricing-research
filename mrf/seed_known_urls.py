@@ -11,13 +11,13 @@ hospital → MRF-URL pairs and only falls back to search for residuals.
 Supported seed sources (listed in precedence order when multiple files
 are available):
 
-  1. `/data0/mrf/seed_manual.csv`        — hand-curated; authoritative
-  2. `/data0/mrf/seed_health_systems.csv` — health-system MRF directories
+  1. `/data0/mrf-pricing-research/mrf/seed_manual.csv`        — hand-curated; authoritative
+  2. `/data0/mrf-pricing-research/mrf/seed_health_systems.csv` — health-system MRF directories
                                           (Providence, Kaiser, HCA, etc.)
-  3. `/data0/mrf/seed_dolthub.csv`       — DoltHub hospital-price-
+  3. `/data0/mrf-pricing-research/mrf/seed_dolthub.csv`       — DoltHub hospital-price-
                                           transparency-v3 snapshot (stale
                                           but covers ~30% US hospitals)
-  4. `/data0/mrf/seed_turquoise.csv`     — Turquoise Health free 14-
+  4. `/data0/mrf-pricing-research/mrf/seed_turquoise.csv`     — Turquoise Health free 14-
                                           service public dataset
 
 Each seed file must have columns: `ccn,mrf_url` (optional: `notes`).
@@ -41,7 +41,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 HOSP_CSV = OUT_DIR / "hospitals.csv"
 URL_CSV  = OUT_DIR / "mrf_urls.csv"
 

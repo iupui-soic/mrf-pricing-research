@@ -5,12 +5,12 @@ census/pull_census_in.py
 Pulls ACS 5-year Census demographics + CDC PLACES health outcomes
 for Indiana ZIP codes, mirroring the CA pipeline structure.
 
-Reads IN hospital ZIPs from /data0/mrf/hospitals.csv (already built
+Reads IN hospital ZIPs from /data0/mrf-pricing-research/mrf/hospitals.csv (already built
 by mrf/build_hospital_list.py), pulls ACS 5-year and CDC PLACES data
 for those ZIPs, and writes:
 
-    /data0/census/in_zip_demographics.parquet
-    /data0/census/in_zip_health_outcomes.parquet
+    /data0/mrf-pricing-research/census/in_zip_demographics.parquet
+    /data0/mrf-pricing-research/census/in_zip_health_outcomes.parquet
 
 The PLACES output holds modeled prevalence rates from BRFSS, not death
 counts; the CA-side death-records join lives in compare_to_parvati.py
@@ -30,8 +30,8 @@ from pathlib import Path
 import pandas as pd
 
 # ── paths ──────────────────────────────────────────────────────────────────
-HOSPITALS_CSV = Path("/data0/mrf/hospitals.csv")
-OUT_DIR       = Path("/data0/census")
+HOSPITALS_CSV = Path("/data0/mrf-pricing-research/mrf/hospitals.csv")
+OUT_DIR       = Path("/data0/mrf-pricing-research/census")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ACS_CACHE     = OUT_DIR / "in_acs_raw.json"

@@ -39,7 +39,7 @@ CMS_HOSPITAL_GEN_INFO_URL = (
     "Hospital_General_Information.csv"
 )
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 RAW_CSV = OUT_DIR / "hospital_general_info_raw.csv"
 OUT_CSV = OUT_DIR / "hospitals.csv"
 

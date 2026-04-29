@@ -12,10 +12,10 @@ and dollar amounts in a parseable layout. Negotiated cells in the CDM
 are placeholder strings ("Note A", "Not applicable", "None") because
 Kaiser is an integrated system, so we emit GROSS-only output.
 
-Reads the source ZIPs by walking `/data0/mrf/parsed/mrf_log.csv` for rows
+Reads the source ZIPs by walking `/data0/mrf-pricing-research/mrf/parsed/mrf_log.csv` for rows
 with `status == "skip:kaiser_legacy"` whose filename starts with the
 Kaiser EIN `941105628-`. Writes one parquet part per CCN to
-`/data0/mrf/parsed/parts/gross_<state>_<ccn>.parquet` so the existing
+`/data0/mrf-pricing-research/mrf/parsed/parts/gross_<state>_<ccn>.parquet` so the existing
 `concat_parts.py` can fold them into `mrf_gross.parquet` unchanged.
 
 After this runs:
@@ -40,8 +40,8 @@ import pyarrow.parquet as pq
 sys.path.insert(0, str(Path(__file__).parent))
 from parse_mrf import GROSS_SCHEMA, PARTS_DIR  # type: ignore
 
-LOG_CSV = Path("/data0/mrf/parsed/mrf_log.csv")
-DONE_DIR = Path("/data0/mrf/parsed/done")
+LOG_CSV = Path("/data0/mrf-pricing-research/mrf/parsed/mrf_log.csv")
+DONE_DIR = Path("/data0/mrf-pricing-research/mrf/parsed/done")
 KAISER_EIN = "941105628"
 SCHEMA_TAG = "kaiser_chargemaster_2023"
 FILE_FORMAT = "kaiser_cdm"

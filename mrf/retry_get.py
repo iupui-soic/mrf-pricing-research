@@ -12,8 +12,8 @@ lands on disk; the next `seed_known_urls.py` run will then accept those
 URLs since the file exists.
 
 Inputs:  /tmp/retry_unresolved.csv  (cols: ccn,state,mrf_url,name,source)
-Outputs: appended rows in /data0/mrf/downloads.csv;
-         /data0/mrf/files/<state>/<ccn>/<basename> for each success.
+Outputs: appended rows in /data0/mrf-pricing-research/mrf/downloads.csv;
+         /data0/mrf-pricing-research/mrf/files/<state>/<ccn>/<basename> for each success.
 
 Usage:
     .venv/bin/python mrf/retry_get.py

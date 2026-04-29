@@ -5,7 +5,7 @@ download_mrfs.py
 Download the MRF files discovered by `discover_mrf_urls.py`.
 
 Reads `mrf_urls.csv`, downloads each non-null `mrf_url` to
-`/data0/mrf/files/<state>/<ccn>/<basename>`, with:
+`/data0/mrf-pricing-research/mrf/files/<state>/<ccn>/<basename>`, with:
   - streaming (for multi-GB files)
   - per-host rate limiting (1.2s between requests to same host)
   - up to 8-way concurrency across distinct hosts
@@ -39,7 +39,7 @@ from typing import Optional
 import pandas as pd
 import requests
 
-OUT_DIR  = Path("/data0/mrf")
+OUT_DIR  = Path("/data0/mrf-pricing-research/mrf")
 URL_CSV  = OUT_DIR / "mrf_urls.csv"
 FILES_DIR = OUT_DIR / "files"
 DL_CSV   = OUT_DIR / "downloads.csv"

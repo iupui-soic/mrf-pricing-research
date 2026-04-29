@@ -54,7 +54,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # ── Config ──────────────────────────────────────────────────────────────
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 HOSP_CSV = OUT_DIR / "hospitals.csv"
 URL_CSV  = OUT_DIR / "mrf_urls.csv"
 LOG_CSV  = OUT_DIR / "discovery_log.csv"

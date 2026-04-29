@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pandas as pd
 
-CORPUS = Path("/data0/hcai-chargemasters/ingest/cdm_all.parquet")
+CORPUS = Path("/data0/mrf-pricing-research/hcai-chargemasters/ingest/cdm_all.parquet")
 OUT = Path(__file__).resolve().parent / "audit_sample_200.csv"
 SEED = 20260426  # date-stamped for reproducibility
 N = 200

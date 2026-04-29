@@ -3,7 +3,7 @@
 parse_mrf.py
 ============
 Schema-aware parser for the federal HPT MRF corpus. Reads every file
-flagged status=ok in /data0/mrf/downloads.csv, detects format + schema
+flagged status=ok in /data0/mrf-pricing-research/mrf/downloads.csv, detects format + schema
 version, and emits long-format parquets.
 
 **Resilience design**:
@@ -55,14 +55,14 @@ import ijson
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-OUT_DIR = Path("/data0/mrf/parsed")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf/parsed")
 PARTS_DIR = OUT_DIR / "parts"
 DONE_DIR = OUT_DIR / "done"
 LOG_CSV = OUT_DIR / "mrf_log.csv"
 ERRORS_CSV = OUT_DIR / "mrf_errors.csv"
 PROGRESS_LOG = OUT_DIR / "parse.log"
 
-DOWNLOADS = Path("/data0/mrf/downloads.csv")
+DOWNLOADS = Path("/data0/mrf-pricing-research/mrf/downloads.csv")
 
 # Per-batch flush size (rows). Small enough to bound peak RAM, big
 # enough to keep parquet row groups efficient.

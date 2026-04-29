@@ -4,7 +4,7 @@ coverage_report.py
 ==================
 Reads `mrf_log.csv` + the two output parquets and writes a
 human-readable Markdown coverage report at
-`/data0/mrf/parsed/coverage_report.md`. Mirrors the shape of the CA
+`/data0/mrf-pricing-research/mrf/parsed/coverage_report.md`. Mirrors the shape of the CA
 chargemaster ingest's `coverage_report.md` so the two corpora can be
 compared at a glance in the paper §Methods.
 
@@ -25,7 +25,7 @@ from collections import Counter
 
 import pandas as pd
 
-PARSED = Path("/data0/mrf/parsed")
+PARSED = Path("/data0/mrf-pricing-research/mrf/parsed")
 LOG_CSV = PARSED / "mrf_log.csv"
 GROSS_PARQUET = PARSED / "mrf_gross.parquet"
 NEG_PARQUET = PARSED / "mrf_negotiated.parquet"

@@ -14,8 +14,8 @@ coverage report.
 
 Usage:
     python ingest_hcai.py \\
-        --base /data0/hcai-chargemasters \\
-        --out  /data0/hcai-chargemasters/ingest \\
+        --base /data0/mrf-pricing-research/hcai-chargemasters \\
+        --out  /data0/mrf-pricing-research/hcai-chargemasters/ingest \\
         [--year 2024]        # limit to one year
         [--workers 8]        # default: os.cpu_count() // 2
         [--resume]           # skip files already in ingest_log.csv
@@ -942,9 +942,9 @@ def _write_coverage(out: Path, years: set[str] | None):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--base", type=Path,
-                    default=Path("/data0/hcai-chargemasters"))
+                    default=Path("/data0/mrf-pricing-research/hcai-chargemasters"))
     ap.add_argument("--out", type=Path,
-                    default=Path("/data0/hcai-chargemasters/ingest"))
+                    default=Path("/data0/mrf-pricing-research/hcai-chargemasters/ingest"))
     ap.add_argument("--year", type=str, action="append",
                     help="limit to one or more years; repeat flag for multiple")
     ap.add_argument("--workers", type=int,

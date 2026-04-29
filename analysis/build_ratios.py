@@ -6,19 +6,19 @@ Computes price-to-Medicare ratios for chargemaster, cash, and negotiated
 prices across the CA + IN MRF corpus, then summarizes by state.
 
 Inputs:
-  /data0/mrf/parsed/mrf_gross.parquet
-  /data0/mrf/parsed/mrf_negotiated.parquet
-  /data0/crosswalk/facilities_crosswalk.parquet
-  /data0/medicare/medicare_cpt_2026.parquet
+  /data0/mrf-pricing-research/mrf/parsed/mrf_gross.parquet
+  /data0/mrf-pricing-research/mrf/parsed/mrf_negotiated.parquet
+  /data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet
+  /data0/mrf-pricing-research/medicare/medicare_cpt_2026.parquet
 
 Outputs:
-  /data0/analysis/ratios_hospital_code.parquet
+  /data0/mrf-pricing-research/analysis/ratios_hospital_code.parquet
       ccn, state, code, gross, cash, neg_min, neg_median, neg_n_payers,
       medicare_allowable, gross_ratio, cash_ratio, neg_min_ratio,
       neg_median_ratio
-  /data0/analysis/ratios_state_summary.parquet
+  /data0/mrf-pricing-research/analysis/ratios_state_summary.parquet
       state, price_type, n_pairs, p25, p50, p75, mean
-  /data0/analysis/ratios_payer_state.parquet
+  /data0/mrf-pricing-research/analysis/ratios_payer_state.parquet
       state, payer_name, n_pairs, p50_neg_ratio
 """
 
@@ -29,12 +29,12 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-GROSS_PQ      = "/data0/mrf/parsed/mrf_gross.parquet"
-NEG_PQ        = "/data0/mrf/parsed/mrf_negotiated.parquet"
-CROSSWALK_PQ  = "/data0/crosswalk/facilities_crosswalk.parquet"
-BENCHMARK_PQ  = "/data0/medicare/medicare_cpt_2026.parquet"
+GROSS_PQ      = "/data0/mrf-pricing-research/mrf/parsed/mrf_gross.parquet"
+NEG_PQ        = "/data0/mrf-pricing-research/mrf/parsed/mrf_negotiated.parquet"
+CROSSWALK_PQ  = "/data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet"
+BENCHMARK_PQ  = "/data0/mrf-pricing-research/medicare/medicare_cpt_2026.parquet"
 
-OUT_DIR  = Path("/data0/analysis")
+OUT_DIR  = Path("/data0/mrf-pricing-research/analysis")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_HC   = OUT_DIR / "ratios_hospital_code.parquet"
 OUT_SUM  = OUT_DIR / "ratios_state_summary.parquet"

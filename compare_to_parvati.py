@@ -18,8 +18,8 @@ Stages:
   6. Side-by-side vs the effect sizes Parvati reported.
 
 Inputs:
-  - /data0/hcai-chargemasters/ingest/matched_rows_with_zip_2024.csv
-  - /data0/hcai-chargemasters/ingest/ca_deaths_zip_2019-2024.csv
+  - /data0/mrf-pricing-research/hcai-chargemasters/ingest/matched_rows_with_zip_2024.csv
+  - /data0/mrf-pricing-research/hcai-chargemasters/ingest/ca_deaths_zip_2019-2024.csv
   - CENSUS_API_KEY from .env (loaded automatically)
 
 Outputs printed to stdout.
@@ -35,7 +35,7 @@ import numpy as np
 import pandas as pd
 
 
-INGEST   = Path("/data0/hcai-chargemasters/ingest")
+INGEST   = Path("/data0/mrf-pricing-research/hcai-chargemasters/ingest")
 DEATHS_CSV = INGEST / "ca_deaths_zip_2019-2024.csv"
 CENSUS_CACHE = INGEST / "cache_census_zip_2024.csv"
 

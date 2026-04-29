@@ -2,7 +2,7 @@
 """
 build_crosswalk.py
 ==================
-Builds `/data0/crosswalk/facilities_crosswalk.parquet` keyed on CCN, with:
+Builds `/data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet` keyed on CCN, with:
 
   ccn               — CMS Certification Number (6-digit)
   oshpd_id          — CA HCAI facility ID (9-digit; null for non-CA + unmatched)
@@ -16,10 +16,10 @@ Builds `/data0/crosswalk/facilities_crosswalk.parquet` keyed on CCN, with:
   oshpd_match_method — 'exact_zip+name' | 'zip_only_fuzzy' | 'name_only_fuzzy' | 'unmatched'
 
 Inputs (already on disk):
-  /data0/mrf/hospitals.csv            — 528-hospital CA+IN universe (from CMS POS)
-  /data0/hcai-chargemasters/ingest/facilities.csv — 545 CA HCAI facilities
-  /data0/mrf/mrf_urls.csv             — for EIN extraction from URL/filename
-  /data0/mrf/downloads.csv            — fallback for EIN extraction from local_path
+  /data0/mrf-pricing-research/mrf/hospitals.csv            — 528-hospital CA+IN universe (from CMS POS)
+  /data0/mrf-pricing-research/hcai-chargemasters/ingest/facilities.csv — 545 CA HCAI facilities
+  /data0/mrf-pricing-research/mrf/mrf_urls.csv             — for EIN extraction from URL/filename
+  /data0/mrf-pricing-research/mrf/downloads.csv            — fallback for EIN extraction from local_path
 
 Indiana SDH licensure crosswalk and CMS NPPES NPI lookups deferred to v2.
 """
@@ -33,16 +33,16 @@ from pathlib import Path
 
 import pandas as pd
 
-OUT_DIR = Path("/data0/crosswalk")
+OUT_DIR = Path("/data0/mrf-pricing-research/crosswalk")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PARQUET = OUT_DIR / "facilities_crosswalk.parquet"
 OUT_CSV = OUT_DIR / "facilities_crosswalk.csv"  # for quick inspection
 COVERAGE_MD = OUT_DIR / "crosswalk_coverage.md"
 
-HOSPITALS = Path("/data0/mrf/hospitals.csv")
-HCAI_FACILITIES = Path("/data0/hcai-chargemasters/ingest/facilities.csv")
-MRF_URLS = Path("/data0/mrf/mrf_urls.csv")
-DOWNLOADS = Path("/data0/mrf/downloads.csv")
+HOSPITALS = Path("/data0/mrf-pricing-research/mrf/hospitals.csv")
+HCAI_FACILITIES = Path("/data0/mrf-pricing-research/hcai-chargemasters/ingest/facilities.csv")
+MRF_URLS = Path("/data0/mrf-pricing-research/mrf/mrf_urls.csv")
+DOWNLOADS = Path("/data0/mrf-pricing-research/mrf/downloads.csv")
 NPI_CSV = OUT_DIR / "ccn_to_npi.csv"          # from extract_npi_from_mrfs.py
 NPI_NPPES = OUT_DIR / "ccn_to_npi_nppes.csv"  # from lookup_nppes.py
 
@@ -291,9 +291,9 @@ def main() -> None:
     # MRF on disk. NPI/EIN denominators should be against this set.
     n_real_mrf = 0
     real_mrf_ccns: set[str] = set()
-    if (OUT_DIR / "../mrf/downloads.csv").exists() or Path("/data0/mrf/downloads.csv").exists():
+    if (OUT_DIR / "../mrf/downloads.csv").exists() or Path("/data0/mrf-pricing-research/mrf/downloads.csv").exists():
         import csv as _csv
-        with open("/data0/mrf/downloads.csv") as f:
+        with open("/data0/mrf-pricing-research/mrf/downloads.csv") as f:
             for r in _csv.DictReader(f):
                 if r.get("status") == "ok":
                     real_mrf_ccns.add(r["ccn"])

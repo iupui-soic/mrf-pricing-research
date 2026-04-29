@@ -19,7 +19,7 @@ import csv
 import datetime as dt
 from pathlib import Path
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 URL_CSV = OUT_DIR / "mrf_urls.csv"
 DL_CSV = OUT_DIR / "downloads.csv"
 FILES_DIR = OUT_DIR / "files"

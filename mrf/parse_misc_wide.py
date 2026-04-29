@@ -38,9 +38,9 @@ import pyarrow.parquet as pq
 sys.path.insert(0, str(Path(__file__).parent))
 from parse_mrf import GROSS_SCHEMA, NEG_SCHEMA, PARTS_DIR, DONE_DIR  # type: ignore
 
-LOG_CSV = Path("/data0/mrf/parsed/mrf_log.csv")
-URLS_CSV = Path("/data0/mrf/mrf_urls.csv")
-HOSPITALS_CSV = Path("/data0/mrf/hospitals.csv")
+LOG_CSV = Path("/data0/mrf-pricing-research/mrf/parsed/mrf_log.csv")
+URLS_CSV = Path("/data0/mrf-pricing-research/mrf/mrf_urls.csv")
+HOSPITALS_CSV = Path("/data0/mrf-pricing-research/mrf/hospitals.csv")
 KAISER_EIN = "941105628"
 SCHEMA_TAG_PREFIX = "misc_csv"
 
@@ -219,7 +219,7 @@ def discover_tasks() -> list[MiscTask]:
                 state = hosp.get(ccn)
                 if state not in {"CA", "IN"}:
                     continue
-                files_dir = Path(f"/data0/mrf/files/{state}/{ccn}")
+                files_dir = Path(f"/data0/mrf-pricing-research/mrf/files/{state}/{ccn}")
                 if not files_dir.exists():
                     continue
                 # Pick the largest CSV/JSON/ZIP file in the directory.

@@ -2,14 +2,14 @@
 """
 sync_manual_uploads.py
 ======================
-Move manually-uploaded MRF files from /data0/mrf/files/ root into the
-canonical /data0/mrf/files/<STATE>/<CCN>/<filename> layout, and update
+Move manually-uploaded MRF files from /data0/mrf-pricing-research/mrf/files/ root into the
+canonical /data0/mrf-pricing-research/mrf/files/<STATE>/<CCN>/<filename> layout, and update
 mrf_urls.csv + downloads.csv accordingly.
 
 Source of truth for (ccn -> URL) is mrf/pending_hospitals.csv (column
 mrf_url). Source of truth for (ccn -> uploaded filename) is the
 explicit FILE_MAP below — built by inspecting the files dropped in
-/data0/mrf/files/ root after the user manually downloaded them.
+/data0/mrf-pricing-research/mrf/files/ root after the user manually downloaded them.
 
 Three pending hospitals have no file (handled as exemptions):
   054089 Jewish Home & Rehab Center      -> exempt:gated_portal (site down)
@@ -26,13 +26,13 @@ import shutil
 import sys
 from pathlib import Path
 
-OUT_DIR = Path("/data0/mrf")
+OUT_DIR = Path("/data0/mrf-pricing-research/mrf")
 FILES_DIR = OUT_DIR / "files"
 URL_CSV = OUT_DIR / "mrf_urls.csv"
 DL_CSV = OUT_DIR / "downloads.csv"
 PENDING_CSV = Path(__file__).resolve().parent / "pending_hospitals.csv"
 
-# CCN -> filename in /data0/mrf/files/ (root) for each manual upload.
+# CCN -> filename in /data0/mrf-pricing-research/mrf/files/ (root) for each manual upload.
 FILE_MAP: dict[str, str] = {
     "050022": "33-0751869_RIVERSIDE-COMMUNITY-HOSPITAL_standardcharges.json",
     "050125": "946000533_regional-medical-center_standardcharges.csv",
@@ -74,7 +74,7 @@ EXEMPTIONS: dict[str, tuple[str, str]] = {
     ),
 }
 
-# Files in /data0/mrf/files/ root that are duplicates of files already
+# Files in /data0/mrf-pricing-research/mrf/files/ root that are duplicates of files already
 # present under STATE/CCN — just delete the root-level copy.
 DUPLICATES_TO_REMOVE: list[str] = [
     "842021041_medical-behavioral-hospital-of-indianapolis_standardcharges.csv",  # CCN 154068, already OK

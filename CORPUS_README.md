@@ -5,10 +5,10 @@ Four data products, all on `/data0/`, all keyed for joins via the
 
 | Corpus | Path | Size | Rows / Files |
 |---|---|---|---|
-| CA chargemaster ingest | `/data0/hcai-chargemasters/ingest/` | ~3 GB | 56.5 M rows |
-| Federal HPT MRFs | `/data0/mrf/files/<state>/<ccn>/` | ~72 GB | 458 valid + 70 exempt = 528 hospitals |
-| Medicare benchmarks | `/data0/medicare/extracted/<slot>/` | 86 MB | 9 CMS files (5 FY) |
-| Hospital identity crosswalk | `/data0/crosswalk/` | 160 KB | 528 × 18 |
+| CA chargemaster ingest | `/data0/mrf-pricing-research/hcai-chargemasters/ingest/` | ~3 GB | 56.5 M rows |
+| Federal HPT MRFs | `/data0/mrf-pricing-research/mrf/files/<state>/<ccn>/` | ~72 GB | 458 valid + 70 exempt = 528 hospitals |
+| Medicare benchmarks | `/data0/mrf-pricing-research/medicare/extracted/<slot>/` | 86 MB | 9 CMS files (5 FY) |
+| Hospital identity crosswalk | `/data0/mrf-pricing-research/crosswalk/` | 160 KB | 528 × 18 |
 
 ---
 
@@ -43,7 +43,7 @@ disclosures 2014–2025. One row per (hospital × sheet × code × charge column
 | `year` | int | Disclosure year |
 | `oshpd_id` | str | 9-digit CA HCAI facility ID; null for ~15% of 2024–2025 files where filename lacks the prefix |
 | `hospital_folder` | str | Raw folder name (not canonicalized) |
-| `file_source` | str | Relative path under `/data0/hcai-chargemasters/` |
+| `file_source` | str | Relative path under `/data0/mrf-pricing-research/hcai-chargemasters/` |
 | `sheet_name` | str | Sheet within the xlsx/xls file |
 | `header_row` | int | Row index detected as the header (audit trail) |
 | `code_type` | str | CPT \| HCPCS \| REVCODE \| DRG \| NDC \| ICD10PCS |
@@ -60,7 +60,7 @@ disclosures 2014–2025. One row per (hospital × sheet × code × charge column
 
 ```python
 import pandas as pd
-df = pd.read_parquet('/data0/hcai-chargemasters/ingest/cdm_all.parquet')
+df = pd.read_parquet('/data0/mrf-pricing-research/hcai-chargemasters/ingest/cdm_all.parquet')
 
 # Target-CPT ED + OB delivery
 targets = ['99281','99282','99283','99284','99285','99291','99292',
@@ -88,11 +88,11 @@ location `<state>/<ccn>/<filename>`.
 
 | Path | Purpose |
 |---|---|
-| `/data0/mrf/hospitals.csv` | 528-hospital universe (CA + IN, all CMS-POS hospital types) |
-| `/data0/mrf/mrf_urls.csv` | URL discovery state per hospital |
-| `/data0/mrf/downloads.csv` | Per-file ledger: sha256, bytes, content-type, status, source URL |
-| `/data0/mrf/files/<state>/<ccn>/` | Downloaded MRF files |
-| `/data0/mrf/exempt_*.csv` | Per-category exemption lists |
+| `/data0/mrf-pricing-research/mrf/hospitals.csv` | 528-hospital universe (CA + IN, all CMS-POS hospital types) |
+| `/data0/mrf-pricing-research/mrf/mrf_urls.csv` | URL discovery state per hospital |
+| `/data0/mrf-pricing-research/mrf/downloads.csv` | Per-file ledger: sha256, bytes, content-type, status, source URL |
+| `/data0/mrf-pricing-research/mrf/files/<state>/<ccn>/` | Downloaded MRF files |
+| `/data0/mrf-pricing-research/mrf/exempt_*.csv` | Per-category exemption lists |
 
 ### Status (2026-04-26)
 
@@ -130,7 +130,7 @@ location `<state>/<ccn>/<filename>`.
 
 ```python
 import pandas as pd
-dl = pd.read_csv('/data0/mrf/downloads.csv')
+dl = pd.read_csv('/data0/mrf-pricing-research/mrf/downloads.csv')
 ok = dl[dl['status'] == 'ok']      # 458 valid MRFs
 print(ok[['ccn','state','local_path','content_type','bytes_downloaded']].head())
 ```
@@ -157,7 +157,7 @@ and `negotiated ÷ Medicare` ratios.
 | `extracted/table5_fy2025/` | `…fy-2025-ipps-final-rule-table-5.zip` | IPPS MS-DRG weights, GMLOS, AMLOS |
 | `extracted/table5_fy2026/` | `…fy2026-ipps-fr-table-5.zip` | IPPS FY2026 |
 
-Ledger: `/data0/medicare/downloads.csv` (rel_path, source_url, sha256, bytes, status).
+Ledger: `/data0/mrf-pricing-research/medicare/downloads.csv` (rel_path, source_url, sha256, bytes, status).
 
 ### Key files inside
 
@@ -179,11 +179,11 @@ other and to external datasets (Census, mortality, NPPES).
 
 | File | Purpose |
 |---|---|
-| `/data0/crosswalk/facilities_crosswalk.parquet` | Master crosswalk, 528 × 18 |
-| `/data0/crosswalk/facilities_crosswalk.csv` | CSV mirror (for spot inspection) |
-| `/data0/crosswalk/crosswalk_coverage.md` | Per-field coverage breakdown with provenance |
-| `/data0/crosswalk/ccn_to_npi.csv` | NPI extracted from MRF metadata `type_2_npi` |
-| `/data0/crosswalk/ccn_to_npi_nppes.csv` | NPI from NPPES Registry API fallback |
+| `/data0/mrf-pricing-research/crosswalk/facilities_crosswalk.parquet` | Master crosswalk, 528 × 18 |
+| `/data0/mrf-pricing-research/crosswalk/facilities_crosswalk.csv` | CSV mirror (for spot inspection) |
+| `/data0/mrf-pricing-research/crosswalk/crosswalk_coverage.md` | Per-field coverage breakdown with provenance |
+| `/data0/mrf-pricing-research/crosswalk/ccn_to_npi.csv` | NPI extracted from MRF metadata `type_2_npi` |
+| `/data0/mrf-pricing-research/crosswalk/ccn_to_npi_nppes.csv` | NPI from NPPES Registry API fallback |
 
 ### Schema (per row)
 
