@@ -91,6 +91,9 @@ def main():
             INNER JOIN '{XW_PQ}' xw ON xw.ccn = r.ccn
             WHERE r.state IN ('CA','IN')
               AND xw.zip IS NOT NULL
+              AND (r.gross_ratio IS NULL OR r.gross_ratio < 200)
+              AND (r.cash_ratio IS NULL OR r.cash_ratio < 200)
+              AND (r.neg_min_ratio IS NULL OR r.neg_min_ratio < 200)
             GROUP BY r.ccn, xw.zip, xw.state
         )
         SELECT
