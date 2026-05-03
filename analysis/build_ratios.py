@@ -106,6 +106,10 @@ def main():
         LEFT JOIN xw ON xw.ccn = COALESCE(g.ccn, n.ccn)
         INNER JOIN mc ON mc.code = COALESCE(g.code, n.code)
         WHERE mc.medicare_allowable > 0
+        AND NOT (
+              mc.code LIKE 'J%'
+              AND mc.medicare_allowable < 10
+          )
     """)
     n_hc = con.execute("SELECT COUNT(*) FROM hc").fetchone()[0]
     print(f"[join] {n_hc:,} hospital × code rows with Medicare benchmark")
