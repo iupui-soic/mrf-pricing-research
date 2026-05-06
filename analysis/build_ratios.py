@@ -111,7 +111,16 @@ def main():
     n_hc = con.execute("SELECT COUNT(*) FROM hc").fetchone()[0]
     print(f"[join] {n_hc:,} hospital × code rows with Medicare benchmark")
 
-# Compute 99.5th percentile winsorization caps by state × price type
+    # Filter to CA/IN first to ensure consistent row universe
+    con.execute("""
+        CREATE TEMP TABLE hc_filtered AS
+        SELECT * FROM hc
+        WHERE state IN ('CA','IN')
+    """)
+    n_filt = con.execute("SELECT COUNT(*) FROM hc_filtered").fetchone()[0]
+    print(f"[filter] {n_filt:,} hospital × code rows for CA + IN")
+
+    # Compute 99.5th percentile winsorization caps by state × price type
     con.execute("""
         CREATE TEMP TABLE caps AS
         SELECT
@@ -120,9 +129,8 @@ def main():
             QUANTILE_CONT(cash       / medicare_allowable, 0.995) AS cap_cash,
             QUANTILE_CONT(neg_min    / medicare_allowable, 0.995) AS cap_neg_min,
             QUANTILE_CONT(neg_median / medicare_allowable, 0.995) AS cap_neg_median
-        FROM hc
-        WHERE state IN ('CA','IN')
-          AND gross > 0
+        FROM hc_filtered
+        WHERE gross > 0
           AND medicare_allowable > 0
         GROUP BY state
     """)
@@ -147,9 +155,8 @@ def main():
             CASE WHEN h.neg_median > 0
                  AND h.neg_median / h.medicare_allowable <= c.cap_neg_median
                  THEN h.neg_median / h.medicare_allowable END AS neg_median_ratio
-        FROM hc h
+        FROM hc_filtered h
         JOIN caps c ON c.state = h.state
-        WHERE h.state IN ('CA','IN')
     """)
 
     print(f"[out] {OUT_HC} …")
@@ -177,7 +184,7 @@ def main():
             QUANTILE_CONT(r, 0.75)                AS p75,
             AVG(r)                                AS mean
         FROM long
-        WHERE r is not null  -- drop pathological ratios
+        WHERE r IS NOT NULL
         GROUP BY state, price_type
         ORDER BY state, price_type
     """).df()
