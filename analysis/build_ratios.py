@@ -111,17 +111,45 @@ def main():
     n_hc = con.execute("SELECT COUNT(*) FROM hc").fetchone()[0]
     print(f"[join] {n_hc:,} hospital × code rows with Medicare benchmark")
 
+# Compute 99.5th percentile winsorization caps by state × price type
+    con.execute("""
+        CREATE TEMP TABLE caps AS
+        SELECT
+            state,
+            QUANTILE_CONT(gross      / medicare_allowable, 0.995) AS cap_gross,
+            QUANTILE_CONT(cash       / medicare_allowable, 0.995) AS cap_cash,
+            QUANTILE_CONT(neg_min    / medicare_allowable, 0.995) AS cap_neg_min,
+            QUANTILE_CONT(neg_median / medicare_allowable, 0.995) AS cap_neg_median
+        FROM hc
+        WHERE state IN ('CA','IN')
+          AND gross > 0
+          AND medicare_allowable > 0
+        GROUP BY state
+    """)
+    caps_df = con.execute("SELECT * FROM caps").df()
+    print("[winsorize] 99.5th percentile caps by state:")
+    print(caps_df.to_string(index=False))
+
     con.execute("""
         CREATE TEMP TABLE ratios AS
         SELECT
-            ccn, state, code, gross, cash, neg_min, neg_median, neg_n_payers,
-            medicare_allowable, bench_source,
-            CASE WHEN gross      > 0 THEN gross      / medicare_allowable END AS gross_ratio,
-            CASE WHEN cash       > 0 THEN cash       / medicare_allowable END AS cash_ratio,
-            CASE WHEN neg_min    > 0 THEN neg_min    / medicare_allowable END AS neg_min_ratio,
-            CASE WHEN neg_median > 0 THEN neg_median / medicare_allowable END AS neg_median_ratio
-        FROM hc
-        WHERE state IN ('CA','IN')
+            h.ccn, h.state, h.code, h.gross, h.cash, h.neg_min, h.neg_median,
+            h.neg_n_payers, h.medicare_allowable, h.bench_source,
+            CASE WHEN h.gross      > 0
+                 AND h.gross      / h.medicare_allowable <= c.cap_gross
+                 THEN h.gross      / h.medicare_allowable END AS gross_ratio,
+            CASE WHEN h.cash       > 0
+                 AND h.cash       / h.medicare_allowable <= c.cap_cash
+                 THEN h.cash       / h.medicare_allowable END AS cash_ratio,
+            CASE WHEN h.neg_min    > 0
+                 AND h.neg_min    / h.medicare_allowable <= c.cap_neg_min
+                 THEN h.neg_min    / h.medicare_allowable END AS neg_min_ratio,
+            CASE WHEN h.neg_median > 0
+                 AND h.neg_median / h.medicare_allowable <= c.cap_neg_median
+                 THEN h.neg_median / h.medicare_allowable END AS neg_median_ratio
+        FROM hc h
+        JOIN caps c ON c.state = h.state
+        WHERE h.state IN ('CA','IN')
     """)
 
     print(f"[out] {OUT_HC} …")
@@ -149,7 +177,7 @@ def main():
             QUANTILE_CONT(r, 0.75)                AS p75,
             AVG(r)                                AS mean
         FROM long
-        WHERE r BETWEEN 0.01 AND 1000  -- drop pathological ratios
+        WHERE r is not null  -- drop pathological ratios
         GROUP BY state, price_type
         ORDER BY state, price_type
     """).df()
