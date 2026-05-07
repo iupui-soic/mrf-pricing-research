@@ -120,18 +120,20 @@ def main():
     n_filt = con.execute("SELECT COUNT(*) FROM hc_filtered").fetchone()[0]
     print(f"[filter] {n_filt:,} hospital × code rows for CA + IN")
 
-    # Compute 99.5th percentile trimming caps by state × price type
+    # Compute 99.5th percentile trimming caps by state × price type.
+    # Each cap is computed over rows where THAT price-type is positive,
+    # not over the gross-having subset (which would bias caps for cash /
+    # negotiated rates by excluding negotiated-only hospitals).
     con.execute("""
         CREATE TEMP TABLE caps AS
         SELECT
             state,
-            QUANTILE_CONT(gross      / medicare_allowable, 0.995) AS cap_gross,
-            QUANTILE_CONT(cash       / medicare_allowable, 0.995) AS cap_cash,
-            QUANTILE_CONT(neg_min    / medicare_allowable, 0.995) AS cap_neg_min,
-            QUANTILE_CONT(neg_median / medicare_allowable, 0.995) AS cap_neg_median
+            QUANTILE_CONT(CASE WHEN gross      > 0 THEN gross      / medicare_allowable END, 0.995) AS cap_gross,
+            QUANTILE_CONT(CASE WHEN cash       > 0 THEN cash       / medicare_allowable END, 0.995) AS cap_cash,
+            QUANTILE_CONT(CASE WHEN neg_min    > 0 THEN neg_min    / medicare_allowable END, 0.995) AS cap_neg_min,
+            QUANTILE_CONT(CASE WHEN neg_median > 0 THEN neg_median / medicare_allowable END, 0.995) AS cap_neg_median
         FROM hc_filtered
-        WHERE gross > 0
-          AND medicare_allowable > 0
+        WHERE medicare_allowable > 0
         GROUP BY state
     """)
     caps_df = con.execute("SELECT * FROM caps").df()
