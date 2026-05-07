@@ -1,4 +1,4 @@
-# PRICEPORTAL — Open hospital price transparency pipeline (CA + IN)
+# PricePortal — Open hospital price transparency pipeline (CA + IN)
 
 Reproducible pipeline that builds an open, multi-source hospital price
 transparency corpus for California and Indiana, spanning four price
@@ -7,6 +7,8 @@ hospital × code × ZIP resolution.
 
 **Public portal**: https://pricingapp.streamlit.app/ — Streamlit app over
 the analytic outputs. Source: https://github.com/pnaliyatthaliyazchayil/PricingPortal
+
+**Archived corpus (Zenodo, DOI-citable)**: [10.5281/zenodo.19941038](https://doi.org/10.5281/zenodo.19941038) — 16 analysis-grade parquet files (6.42 GB) covering federal MRFs (305M gross + 417M negotiated rows across 528 hospitals), Medicare CPT/HCPCS benchmarks, the hospital × code price-to-Medicare ratio panel (1,528,609 rows), Wang 2023 / Chang & Psek 2024 replication outputs, and ZIP-level community-risk variables. CC-BY-4.0. See `DATA_DICTIONARY.md` in the deposit for per-file schema.
 
 ## Pipeline components
 
