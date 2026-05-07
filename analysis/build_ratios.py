@@ -120,7 +120,7 @@ def main():
     n_filt = con.execute("SELECT COUNT(*) FROM hc_filtered").fetchone()[0]
     print(f"[filter] {n_filt:,} hospital × code rows for CA + IN")
 
-    # Compute 99.5th percentile winsorization caps by state × price type
+    # Compute 99.5th percentile trimming caps by state × price type
     con.execute("""
         CREATE TEMP TABLE caps AS
         SELECT
@@ -135,7 +135,7 @@ def main():
         GROUP BY state
     """)
     caps_df = con.execute("SELECT * FROM caps").df()
-    print("[winsorize] 99.5th percentile caps by state:")
+    print("[trim] 99.5th percentile caps by state:")
     print(caps_df.to_string(index=False))
 
     con.execute("""
@@ -144,15 +144,19 @@ def main():
             h.ccn, h.state, h.code, h.gross, h.cash, h.neg_min, h.neg_median,
             h.neg_n_payers, h.medicare_allowable, h.bench_source,
             CASE WHEN h.gross      > 0
+                 AND h.gross      / h.medicare_allowable >= 0.01
                  AND h.gross      / h.medicare_allowable <= c.cap_gross
                  THEN h.gross      / h.medicare_allowable END AS gross_ratio,
             CASE WHEN h.cash       > 0
+                 AND h.cash       / h.medicare_allowable >= 0.01
                  AND h.cash       / h.medicare_allowable <= c.cap_cash
                  THEN h.cash       / h.medicare_allowable END AS cash_ratio,
             CASE WHEN h.neg_min    > 0
+                 AND h.neg_min    / h.medicare_allowable >= 0.01
                  AND h.neg_min    / h.medicare_allowable <= c.cap_neg_min
                  THEN h.neg_min    / h.medicare_allowable END AS neg_min_ratio,
             CASE WHEN h.neg_median > 0
+                 AND h.neg_median / h.medicare_allowable >= 0.01
                  AND h.neg_median / h.medicare_allowable <= c.cap_neg_median
                  THEN h.neg_median / h.medicare_allowable END AS neg_median_ratio
         FROM hc_filtered h
@@ -192,6 +196,9 @@ def main():
     print(f"[out] {OUT_SUM}  ({len(summary)} rows)")
 
     # ── Payer × state negotiated ratio summary ────────────────────────────
+    # Same outlier policy as the ratios table: OPPS <$10 exclusion at the
+    # benchmark level, 0.01 floor, and state-stratified 99.5th-percentile
+    # trim on neg_min/allow.
     payer = con.execute("""
         WITH per_pair AS (
             SELECT
@@ -204,23 +211,31 @@ def main():
             WHERE n.code_type IN ('CPT','HCPCS')
               AND n.negotiated_dollar > 0
               AND mc.medicare_allowable > 0
+              AND NOT (mc.medicare_allowable < 10.00 AND mc.source = 'opps')
               AND xw.state IN ('CA','IN')
               AND n.payer_name IS NOT NULL
               AND TRIM(n.payer_name) <> ''
             GROUP BY xw.state, n.payer_name, n.ccn, UPPER(TRIM(n.code))
+        ),
+        payer_caps AS (
+            SELECT state, QUANTILE_CONT(neg_min/allow, 0.995) AS cap
+            FROM per_pair
+            GROUP BY state
         )
         SELECT
-            state,
-            payer_name,
+            p.state,
+            p.payer_name,
             COUNT(*)                                          AS n_pairs,
-            QUANTILE_CONT(neg_min/allow, 0.50)                AS p50_neg_ratio,
-            QUANTILE_CONT(neg_min/allow, 0.25)                AS p25_neg_ratio,
-            QUANTILE_CONT(neg_min/allow, 0.75)                AS p75_neg_ratio
-        FROM per_pair
-        WHERE neg_min/allow BETWEEN 0.01 AND 1000
-        GROUP BY state, payer_name
+            QUANTILE_CONT(p.neg_min/p.allow, 0.50)            AS p50_neg_ratio,
+            QUANTILE_CONT(p.neg_min/p.allow, 0.25)            AS p25_neg_ratio,
+            QUANTILE_CONT(p.neg_min/p.allow, 0.75)            AS p75_neg_ratio
+        FROM per_pair p
+        JOIN payer_caps c ON c.state = p.state
+        WHERE p.neg_min/p.allow >= 0.01
+          AND p.neg_min/p.allow <= c.cap
+        GROUP BY p.state, p.payer_name
         HAVING COUNT(*) >= 100
-        ORDER BY state, p50_neg_ratio
+        ORDER BY p.state, p50_neg_ratio
     """).df()
     payer.to_parquet(OUT_PAY, index=False)
     print(f"[out] {OUT_PAY}  ({len(payer)} payers with ≥100 pairs)")
