@@ -58,8 +58,8 @@ def main():
         SELECT
             ccn,
             UPPER(TRIM(code)) AS code,
-            MIN(gross_charge)         AS gross,
-            MIN(discounted_cash)      AS cash
+            MEDIAN(gross_charge)      AS gross,
+            MEDIAN(discounted_cash)   AS cash
         FROM gross
         WHERE code_type IN ('CPT','HCPCS')
           AND gross_charge IS NOT NULL
