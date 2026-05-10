@@ -38,7 +38,18 @@ MPFS_CSV  = Path(
     "/data0/mrf-pricing-research/medicare/extracted/rvu26a/PPRRVU2026_Jan_nonQPP.csv"
 )
 
-# CMS CY2026 MPFS non-MIPS conversion factor (Final Rule).
+# MPFS conversion factor used in the deposited corpus (Zenodo record
+# 19941038). This value is $33.2875 — the CY 2024 final-rule CF for dates
+# of service Mar 9–Dec 31 2024 — used as a placeholder during corpus
+# construction (data collection window Q4 2025–Q1 2026), which preceded
+# the CY 2026 Final Rule release on 2025-10-31. The CY 2026 Final Rule
+# (CMS-1832-F, effective 2026-01-01) subsequently set the non-QP CF to
+# $33.40 ($33.57 for QP participants). The maximum impact of correcting
+# the CF on headline state x price-type medians is 0.14% (on CA min-neg);
+# every reported median in the manuscript rounds identically under both
+# CFs at the precision shown. We retain $33.2875 here so the script
+# reproduces the Zenodo-deposited parquets byte-identically; the next
+# corpus release will use MPFS_CF_2026 = 33.40 and refresh the deposit.
 MPFS_CF_2026 = 33.2875
 
 
