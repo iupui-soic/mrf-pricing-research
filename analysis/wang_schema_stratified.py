@@ -128,16 +128,10 @@ def main():
         positions, labels, data, ns = [], [], [], []
         for i, b in enumerate(bucket_order):
             vals = sub[sub["schema_bucket"] == b]["r_gross_cash"].values
-            if len(vals) >= 3:
-                positions.append(i)
-                labels.append(f"{bucket_label[b]}\nn={len(vals)}")
-                data.append(vals)
-                ns.append(len(vals))
-            else:
-                positions.append(i)
-                labels.append(f"{bucket_label[b]}\nn={len(vals)}")
-                data.append(np.array([]))
-                ns.append(len(vals))
+            positions.append(i)
+            labels.append(f"{bucket_label[b]}\nn={len(vals)}")
+            data.append(vals)
+            ns.append(len(vals))
         ax.set_title(f"{st}  (n={sub.shape[0]} discounter hospitals)")
         for i, vals in enumerate(data):
             if len(vals) == 0:
